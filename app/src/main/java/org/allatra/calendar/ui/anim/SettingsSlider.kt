@@ -1,9 +1,7 @@
 package org.allatra.calendar.ui.anim
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
+import android.graphics.*
 import android.os.Build
 import android.util.AttributeSet
 import android.view.View
@@ -18,14 +16,14 @@ class SettingsSlider: View {
     private var paintBezier: Paint? = null
 
     // DEFS
-    private var defaultSliderColor = R.color.colorBgContractedSlider
+    private var defaultSliderColor: Int? = null
 
     constructor(context: Context?) : super(context){
 
     }
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs){
         attrs?.let {
-            //initCustomAttributes(attrs)
+            initCustomAttributes(attrs)
         }
     }
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -34,7 +32,7 @@ class SettingsSlider: View {
         defStyleAttr
     ){
         attrs?.let {
-            //initCustomAttributes(attrs)
+            initCustomAttributes(attrs)
         }
     }
 
@@ -68,13 +66,24 @@ class SettingsSlider: View {
             // define paint
             paintBezier = object : Paint() {
                 init {
-                    style = Style.STROKE
+                    style = Style.FILL
                     isAntiAlias = true
-                    strokeWidth = 2f
-                    color = defaultSliderColor
+                    defaultSliderColor?.let {
+                        color = it
+                    }
                 }
             }
         }
+    }
+
+    private fun initCustomAttributes(attrs: AttributeSet){
+        val customAttributeSet = context.obtainStyledAttributes(
+            attrs,
+            R.styleable.SettingsSlider
+        )
+
+        defaultSliderColor = customAttributeSet.getInt(R.styleable.SettingsSlider_contracted_color, Color.BLUE)
+        customAttributeSet.recycle()
     }
 
     private fun drawBezierPathObject(): Path{
@@ -112,10 +121,10 @@ class SettingsSlider: View {
         val endPointY3 = endPointY1.toFloat()
 
         val controlPointX31 = (width * 0.43).toFloat()
-        val controlPointY31 = (endPointY1 - (height * 0.1)).toFloat()
+        val controlPointY31 = (endPointY1 - (height * 0.12)).toFloat()
 
         val controlPointX32 = (width * 0.57).toFloat()
-        val controlPointY32 = (endPointY1 - (height * 0.1)).toFloat()
+        val controlPointY32 = (endPointY1 - (height * 0.12)).toFloat()
 
         // draw over path
         bezierPath.cubicTo(controlPointX31,controlPointY31,controlPointX32,controlPointY32,endPointX3, endPointY3)

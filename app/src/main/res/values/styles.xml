@@ -8,4 +8,8 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <declare-styleable name="SettingsSlider">
+        <attr name="contracted_color" format="integer"/>
+    </declare-styleable>
+
 </resources>
