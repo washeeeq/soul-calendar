@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Soul Calendar</string>
+    <string name="splash_screen_desc">Image of splash screen</string>
 </resources>
