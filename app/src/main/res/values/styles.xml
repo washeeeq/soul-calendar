@@ -9,7 +9,8 @@
     </style>
 
     <declare-styleable name="SettingsSlider">
-        <attr name="contracted_color" format="integer"/>
+        <attr name="color_start" format="integer"/>
+        <attr name="color_end" format="integer"/>
     </declare-styleable>
 
 </resources>

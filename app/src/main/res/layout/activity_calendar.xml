@@ -13,14 +13,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.45" />
+        app:layout_constraintGuide_percent="0.43" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/verGuideLine2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.55" />
+        app:layout_constraintGuide_percent="0.57" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/horGuideLine"
@@ -30,14 +30,17 @@
         app:layout_constraintGuide_percent="0.935" />
 
     <org.allatra.calendar.ui.anim.SettingsSlider
+        android:id="@+id/sliderSettings"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintHeight_percent="0.5"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:contracted_color="@color/colorBgContractedSlider"/>
+        app:color_start="@color/colorBgSettingsStart"
+        app:color_end="@color/colorBgSettingsEnd"/>
 
     <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/btnExpand"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintHeight_percent="0.05"
