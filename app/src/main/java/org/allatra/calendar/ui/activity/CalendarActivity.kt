@@ -11,8 +11,9 @@ import timber.log.Timber
 
 
 class CalendarActivity : AppCompatActivity() {
-    private var moveY: Float = 0f
-    private val contractAnimationDurationSec = 1000L
+    private var moveYtoDefaultPosition: Float = 0f
+    private val contractAnimationDurationSec = 700L
+    private val hideAnimationDurationSec = 100L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,8 +21,6 @@ class CalendarActivity : AppCompatActivity() {
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
-        } else {
-
         }
 
         initUi()
@@ -39,43 +38,26 @@ class CalendarActivity : AppCompatActivity() {
 
             switchUi()
         }
-
-
     }
 
     private fun initUi(){
-        moveY = (getHeight().div(2)) * 0.8f
+        moveYtoDefaultPosition = (getHeight().div(2)) * 0.8f
 
-        // move back to position 0
-        ObjectAnimator.ofFloat(sliderSettings, "translationY", moveY).apply {
-            duration = 100
+        // hide it
+        ObjectAnimator.ofFloat(mainSliderGroup, "translationY", moveYtoDefaultPosition).apply {
+            duration = hideAnimationDurationSec
             start()
         }
     }
 
     private fun switchUi(){
-        var moveSliderSettingsY: Float = 0f
-        var moveBtnExpandY: Float = 0f
-
-        if(sliderSettings.getIsContracted()){
-            moveBtnExpandY = 1f
-            moveSliderSettingsY = moveY
+        var moveY: Float = if(sliderSettings.getIsContracted()){
+            moveYtoDefaultPosition
         } else {
-            moveBtnExpandY = -moveY
-            moveSliderSettingsY = -1f
+            -1f
         }
 
-        ObjectAnimator.ofFloat(sliderSettings, "translationY", moveSliderSettingsY).apply {
-            duration = contractAnimationDurationSec
-            start()
-        }
-
-        ObjectAnimator.ofFloat(btnExpand, "translationY", moveBtnExpandY).apply {
-            duration = contractAnimationDurationSec
-            start()
-        }
-
-        ObjectAnimator.ofFloat(txtSettings, "translationY", moveBtnExpandY).apply {
+        ObjectAnimator.ofFloat(mainSliderGroup, "translationY", moveY).apply {
             duration = contractAnimationDurationSec
             start()
         }

@@ -10,4 +10,5 @@
     <color name="colorTransparent">#00FFFFFF</color>
     <color name="colorTransparent10">#1AFFFFFF</color>
     <color name="colorTransparent75">#BEFFFFFF</color>
+    <color name="colorBtnSave">#F3CD92ED</color>
 </resources>
