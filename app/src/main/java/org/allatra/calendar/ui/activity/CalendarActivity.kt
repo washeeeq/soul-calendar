@@ -74,6 +74,11 @@ class CalendarActivity : AppCompatActivity() {
             duration = contractAnimationDurationSec
             start()
         }
+
+        ObjectAnimator.ofFloat(txtSettings, "translationY", moveBtnExpandY).apply {
+            duration = contractAnimationDurationSec
+            start()
+        }
     }
 
     private fun getHeight(): Float{

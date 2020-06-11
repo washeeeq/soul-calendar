@@ -8,4 +8,6 @@
     <color name="colorBgSettingsEnd">#86a5de</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorTransparent">#00FFFFFF</color>
+    <color name="colorTransparent10">#1AFFFFFF</color>
+    <color name="colorTransparent75">#BEFFFFFF</color>
 </resources>

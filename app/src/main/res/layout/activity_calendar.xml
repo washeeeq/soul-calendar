@@ -39,6 +39,302 @@
         app:color_start="@color/colorBgSettingsStart"
         app:color_end="@color/colorBgSettingsEnd"/>
 
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/horGuideLine1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.56" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/txtSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        app:layout_constraintHeight_percent="0.03"
+        android:text="@string/txt_settings"
+        app:layout_constraintTop_toTopOf="@id/horGuideLine1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:textColor="@color/colorWhite"/>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/horGuideLine2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.61" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/languageLayoutGroup"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.9"
+        app:layout_constraintHeight_percent="0.05"
+        app:layout_constraintTop_toTopOf="@id/horGuideLine2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@color/colorTransparent10">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.05" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_percent="0.5"
+            android:adjustViewBounds="true"
+            app:layout_constraintStart_toStartOf="@id/verGuideLine01"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:src="@drawable/icon_language"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine02"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.12" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/txtSelectLanguage"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_percent="0.7"
+            android:gravity="center_vertical"
+            android:text="@string/txt_select_language"
+            app:layout_constraintStart_toStartOf="@id/verGuideLine02"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:textColor="@color/colorTransparent75"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine03"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.97" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/horGuideLine3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.67" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/notificationLayoutGroup"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.9"
+        app:layout_constraintHeight_percent="0.05"
+        app:layout_constraintTop_toTopOf="@id/horGuideLine3"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@color/colorTransparent10">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.05" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_percent="0.5"
+            android:adjustViewBounds="true"
+            app:layout_constraintStart_toStartOf="@id/verGuideLine11"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:src="@drawable/icon_notifications"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine12"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.12" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/txtAllowNotifications"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_percent="0.7"
+            android:gravity="center_vertical"
+            android:text="@string/txt_allow_notifications"
+            app:layout_constraintStart_toStartOf="@id/verGuideLine12"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:textColor="@color/colorTransparent75"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.97" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/horGuideLine4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.73" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/timeNotificationLayoutGroup"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.9"
+        app:layout_constraintHeight_percent="0.05"
+        app:layout_constraintTop_toTopOf="@id/horGuideLine4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@color/colorTransparent10">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine21"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.12" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_percent="0.5"
+            android:adjustViewBounds="true"
+            app:layout_constraintStart_toStartOf="@id/verGuideLine21"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:src="@drawable/icon_time_of_notif"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine22"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.19" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/txtTimeOfNotification"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_percent="0.7"
+            android:gravity="center_vertical"
+            android:text="@string/txt_time_of_notification"
+            app:layout_constraintStart_toStartOf="@id/verGuideLine22"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:textColor="@color/colorTransparent75"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine23"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.97" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/horGuideLine5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.79" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/shareLayoutGroup"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.9"
+        app:layout_constraintHeight_percent="0.05"
+        app:layout_constraintTop_toTopOf="@id/horGuideLine5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@color/colorTransparent10">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine31"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.05" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_percent="0.5"
+            android:adjustViewBounds="true"
+            app:layout_constraintStart_toStartOf="@id/verGuideLine31"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:src="@drawable/icon_share"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine32"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.12" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/txtShare"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_percent="0.7"
+            android:gravity="center_vertical"
+            android:text="@string/txt_share"
+            app:layout_constraintStart_toStartOf="@id/verGuideLine32"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:textColor="@color/colorTransparent75"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/verGuideLine33"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.97" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/horGuideLine6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.9" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/verGuideLine3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.05" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.27"
+        app:layout_constraintHeight_percent="0.05"
+        android:background="@color/colorTransparent10"
+        android:text="@string/txt_btn_cancel"
+        android:textColor="@color/colorWhite"
+        android:textAllCaps="false"
+        app:layout_constraintTop_toTopOf="@id/horGuideLine6"
+        app:layout_constraintStart_toStartOf="@id/verGuideLine3"/>
+
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/btnExpand"
         android:layout_width="0dp"
