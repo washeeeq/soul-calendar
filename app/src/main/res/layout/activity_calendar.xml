@@ -152,6 +152,33 @@
                 android:orientation="vertical"
                 app:layout_constraintGuide_percent="0.97" />
 
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintHeight_percent="0.8"
+                app:layout_constraintWidth_percent="0.11"
+                android:background="@drawable/bg_theme_spinner"
+                app:layout_constraintEnd_toStartOf="@id/verGuideLine03"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:paddingStart="8dp"
+                android:paddingEnd="2dp">
+
+                <androidx.appcompat.widget.AppCompatSpinner
+                    android:id="@+id/spnLanguage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/colorTransparent"/>
+
+                <ImageView
+                    android:layout_gravity="end|center_vertical"
+                    android:contentDescription="@null"
+                    android:paddingEnd="1dp"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:src="@drawable/icon_spinner" />
+            </FrameLayout>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.constraintlayout.widget.Guideline
@@ -214,6 +241,17 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 app:layout_constraintGuide_percent="0.97" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchShowNotif"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="end|center"
+                android:scaleX="0.7"
+                android:scaleY="0.7"
+                app:layout_constraintEnd_toStartOf="@id/verGuideLine13"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -278,6 +316,56 @@
                 android:orientation="vertical"
                 app:layout_constraintGuide_percent="0.97" />
 
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/txtMinutes"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                app:layout_constraintHeight_percent="0.7"
+                android:gravity="center_vertical"
+                android:text="@string/txt_default_minute"
+                app:autoSizeMaxTextSize="13sp"
+                app:autoSizeMinTextSize="7sp"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform"
+                app:layout_constraintEnd_toStartOf="@id/verGuideLine23"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:textColor="@color/colorTransparent75"
+                android:background="@drawable/bg_theme_time_picker"
+                android:padding="2dp" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/txtDivider"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                app:layout_constraintHeight_percent="0.7"
+                android:gravity="center_vertical"
+                android:text="@string/txt_div_min_hour"
+                app:layout_constraintEnd_toStartOf="@id/txtMinutes"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:textColor="@color/colorTransparent75"
+                android:padding="2dp" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/txtHours"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                app:layout_constraintHeight_percent="0.7"
+                android:gravity="center_vertical"
+                android:text="@string/txt_default_hour"
+                app:autoSizeMaxTextSize="13sp"
+                app:autoSizeMinTextSize="7sp"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform"
+                app:layout_constraintEnd_toStartOf="@id/txtDivider"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:textColor="@color/colorTransparent75"
+                android:background="@drawable/bg_theme_time_picker"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"/>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.constraintlayout.widget.Guideline
@@ -293,7 +381,7 @@
             android:layout_height="0dp"
             app:layout_constraintWidth_percent="0.9"
             app:layout_constraintHeight_percent="0.09"
-            app:layout_constraintTop_toTopOf="@id/horGuideLine5"
+            app:layout_constraintTop_toBottomOf="@id/horGuideLine5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:background="@color/colorTransparent10">

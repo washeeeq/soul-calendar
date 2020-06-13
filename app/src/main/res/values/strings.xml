@@ -8,4 +8,11 @@
     <string name="txt_share">Share</string>
     <string name="txt_btn_cancel">Cancel</string>
     <string name="txt_btn_save">Save</string>
+    <string name="txt_default_minute">00</string>
+    <string name="txt_div_min_hour">:</string>
+    <string name="txt_default_hour">10</string>
+    <string-array name="languages_image">
+        <item>ru</item>
+        <item>cancel</item>
+    </string-array>
 </resources>

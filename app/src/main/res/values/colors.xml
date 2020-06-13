@@ -10,5 +10,7 @@
     <color name="colorTransparent">#00FFFFFF</color>
     <color name="colorTransparent10">#1AFFFFFF</color>
     <color name="colorTransparent75">#BEFFFFFF</color>
-    <color name="colorBtnSave">#F3CD92ED</color>
+    <color name="colorBlackAlpha20">#32000000</color>
+    <color name="colorBtnSave">#A1CD92ED</color>
+    <color name="colorClock">#bd76c6</color>
 </resources>
