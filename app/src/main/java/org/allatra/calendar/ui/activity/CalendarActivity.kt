@@ -9,17 +9,20 @@ import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.activity_calendar.*
-import kotlinx.android.synthetic.main.activity_calendar.view.*
+import kotlinx.android.synthetic.main.activity_splash.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.allatra.calendar.BuildConfig
 import org.allatra.calendar.R
+import org.allatra.calendar.common.EnumDefinition
 import org.allatra.calendar.db.RealmHandlerObject
 import org.allatra.calendar.db.RealmHandlerObject.DEFAULT_ID
 import org.allatra.calendar.db.Settings
+import org.allatra.calendar.util.UtilHelper
 import org.joda.time.LocalTime
 import timber.log.Timber
 
@@ -43,7 +46,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
 
         initUi()
-        initDB()
+        init()
 
         /**
          * Expand settings.
@@ -100,16 +103,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             showOrHideSettings()
         }
 
-        isUpdating = MutableLiveData()
-
-        isUpdating.observe(this, Observer { updatingDb ->
-            if(updatingDb){
-                //stop running actualization
-                loader.show()
-            } else {
-                loader.hide()
-            }
-        })
+        //TODO: Add SHARE button, once picture is to download
     }
 
     private suspend fun updateDbModel() = withContext(Dispatchers.IO) {
@@ -219,7 +213,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         hideTimeNotificationLayout()
     }
 
-    private fun initDB() {
+    private fun init() {
         RealmHandlerObject.initWithContext(this)
         settings = RealmHandlerObject.getDefaultSettings()
 
@@ -247,6 +241,30 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                 txtMinutes.text = minuteString
             }
         }
+
+        isUpdating = MutableLiveData()
+
+        isUpdating.observe(this, Observer { updatingDb ->
+            if(updatingDb){
+                loader.show()
+            } else {
+                loader.hide()
+            }
+        })
+
+        // download picture
+        //TODO: Use Util helper to construcr URL, use glide to load it, check internet connction before
+        val apiUrl = UtilHelper.getApiUrl(1, getHeight(), getWidth())
+        Timber.i("apiUrl = $apiUrl")
+
+        // load it
+        motivatorOfDay?.let {
+            Glide
+                .with(this)
+                .load(apiUrl)
+                .optionalCenterCrop()
+                .into(it)
+        }
     }
 
     private fun switchUi(){
@@ -262,11 +280,19 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
     }
 
-    private fun getHeight(): Float{
+    private fun getHeight(): Int{
         val display = windowManager.defaultDisplay
         val size = Point()
         display.getSize(size)
 
-        return size.y.toFloat()
+        return size.y
+    }
+
+    private fun getWidth(): Int{
+        val display = windowManager.defaultDisplay
+        val size = Point()
+        display.getSize(size)
+
+        return size.x
     }
 }

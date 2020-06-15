@@ -11,4 +11,8 @@ object EnumDefinition {
     enum class EnStatus {
         IDLE, DOWNLOADING, READY, FAILED
     }
+
+    enum class EnLanguage(id: Int){
+        RU(1)
+    }
 }
