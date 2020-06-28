@@ -2,6 +2,7 @@ package org.allatra.calendar.db
 import io.realm.RealmObject
 import io.realm.annotations.PrimaryKey
 import org.joda.time.LocalTime
+import java.util.*
 
 open class SettingsDAO: RealmObject() {
     @PrimaryKey
@@ -9,6 +10,12 @@ open class SettingsDAO: RealmObject() {
     private var language: String = ""
     private var allowNotifications: Boolean = false
     private var notificationTime: String = ""
+    private var lastDownloadAt: Date? = null
+
+    fun getLastDownloadAt(): Date? = lastDownloadAt
+    fun setLastDownloadAt(value: Date){
+        this.lastDownloadAt = value
+    }
 
     fun getId(): Long = id
     fun setId(id: Long){

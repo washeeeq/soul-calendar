@@ -4,6 +4,7 @@ import android.content.Context
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import timber.log.Timber
+import java.util.*
 
 object RealmHandlerObject {
     private lateinit var context: Context
@@ -57,6 +58,25 @@ object RealmHandlerObject {
         Timber.tag("createDefaultSettings").i("New DB object with settings has been created. Object = ${settingsDAO.toString()}")
     }
 
+    fun updateDefaultSettings(lastDownloadedAt: Date){
+        val realm = getInstance()
+        val settingsDAO = realm.where(SettingsDAO::class.java).equalTo(DB_FIELD_ID, DEFAULT_ID).findFirst()
+
+        settingsDAO?.let {
+            realm.executeTransaction {
+                settingsDAO.setLastDownloadAt(lastDownloadedAt)
+
+                realm.copyToRealm(settingsDAO)
+                Timber.tag("updateDefaultSettings").i("Db object SettingsDAO was updated. Object = ${settingsDAO.toString()}")
+            }
+
+            close(realm)
+        }?:run{
+            Timber.tag("updateDefaultSettings").e("Db object SettingsDAO was not updated as search returned null.")
+            close(realm)
+        }
+    }
+
     fun updateDefaultSettings(settings: Settings){
         val realm = getInstance()
         val settingsDAO = realm.where(SettingsDAO::class.java).equalTo(DB_FIELD_ID, DEFAULT_ID).findFirst()
@@ -66,6 +86,9 @@ object RealmHandlerObject {
                 settingsDAO.setLanguage(settings.language)
                 settingsDAO.setAllowNotifications(settings.allowNotifications)
                 settingsDAO.setNotificationTime(settings.notificationTime.toString())
+                settings.lastDownloadAt?.let {
+                    settingsDAO.setLastDownloadAt(it)
+                }
 
                 realm.copyToRealm(settingsDAO)
                 Timber.tag("updateDefaultSettings").i("Db object SettingsDAO was updated. Object = ${settingsDAO.toString()}")
@@ -96,6 +119,6 @@ object RealmHandlerObject {
     }
 
     private fun mapToKotlinObject(settingsDAO: SettingsDAO): Settings {
-        return Settings(settingsDAO.getId(), settingsDAO.getLanguage(), settingsDAO.getAllowNotifications(), settingsDAO.getNotificationTime())
+        return Settings(settingsDAO.getId(), settingsDAO.getLanguage(), settingsDAO.getAllowNotifications(), settingsDAO.getNotificationTime(), settingsDAO.getLastDownloadAt())
     }
 }

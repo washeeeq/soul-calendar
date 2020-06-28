@@ -2,29 +2,39 @@ package org.allatra.calendar.ui.activity
 
 import android.animation.ObjectAnimator
 import android.app.TimePickerDialog
+import android.content.Intent
+import android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 import android.graphics.Point
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import kotlinx.android.synthetic.main.activity_calendar.*
-import kotlinx.android.synthetic.main.activity_splash.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.allatra.calendar.BuildConfig
 import org.allatra.calendar.R
-import org.allatra.calendar.common.EnumDefinition
 import org.allatra.calendar.db.RealmHandlerObject
 import org.allatra.calendar.db.RealmHandlerObject.DEFAULT_ID
 import org.allatra.calendar.db.Settings
+import org.allatra.calendar.util.PictureLoaderHelper
 import org.allatra.calendar.util.UtilHelper
 import org.joda.time.LocalTime
 import timber.log.Timber
+import java.io.File
+import java.util.*
 
 
 class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(Dispatchers.Default) {
@@ -36,6 +46,17 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private var settings: Settings? = null
     private lateinit var isUpdating: MutableLiveData<Boolean>
     private var languageArrayAdapter: ArrayAdapter<CharSequence>? = null
+    private val SHARE_INTENT_VAL = "text/plain"
+
+    companion object {
+        private const val MOTIVATOR_NAME = "motivator_of_the_day.jpeg"
+        private const val CONTENT_TYPE_IMAGE = "image/jpeg"
+        private const val FILE_PROVIDER = ".fileprovider"
+
+        private const val DB_DEFAULT_ALLOW_NOTIFICATIONS = false
+        private const val DB_DEFAULT_NOTIFICATION_TIME = "10:00"
+        private const val DB_DEFAULT_LANGUAGE = "ru"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,29 +118,55 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         btnSave.setOnClickListener {
             isUpdating.postValue(true)
             launch(Dispatchers.IO) {
-                updateDbModel()
+                updateDbModel(null)
             }
             //TODO: Update backend service for the notifications.
             showOrHideSettings()
         }
 
-        //TODO: Add SHARE button, once picture is to download
+        /**
+         * Share picture.
+         */
+        shareLayoutGroup.setOnClickListener {
+            motivatorOfDay.drawable?.let {
+                val localFile = getLocalMotivatorFile()
+                Timber.i("Path to load is ${localFile.absolutePath}")
+
+                val shareUri = FileProvider.getUriForFile(applicationContext, applicationContext.packageName.toString() + FILE_PROVIDER, localFile)
+
+                val intent = Intent(Intent.ACTION_SEND)
+                intent.type = CONTENT_TYPE_IMAGE
+                intent.putExtra(Intent.EXTRA_STREAM, shareUri)
+                intent.addFlags(FLAG_GRANT_WRITE_URI_PERMISSION)
+                startActivity(Intent.createChooser(intent, "I would like to share with you an interesting picture."))
+
+            }?: kotlin.run {
+                Timber.e("Drawable is null, no sharing can be done.")
+                //TODO: check if to show user message
+            }
+        }
     }
 
-    private suspend fun updateDbModel() = withContext(Dispatchers.IO) {
+    /**
+     * When app is resumed, get new daily picture and set.
+     */
+    override fun onResume() {
+        super.onResume()
+        getDailyPictureAndSet()
+    }
+
+    private suspend fun updateLastDownloadedAt(lastDownloadedAt: Date) = withContext(Dispatchers.IO) {
+        RealmHandlerObject.updateDefaultSettings(lastDownloadedAt)
+    }
+
+    private suspend fun updateDbModel(lastDownloadedAt: Date?) = withContext(Dispatchers.IO) {
         val languageString = spnLanguage.selectedItem.toString()
         val allowNotifications = switchShowNotif.isChecked
         val notificationTimeString = "${txtHours.text}${txtDivider.text}${txtMinutes.text}"
         val notificationTime = LocalTime.parse(notificationTimeString)
 
         if(settings == null){
-            settings = Settings(DEFAULT_ID, languageString, allowNotifications, notificationTime)
-
-            settings?.let{
-                RealmHandlerObject.createDefaultSettings(it)
-            }?: kotlin.run {
-                Timber.e("App failed to create settings object.")
-            }
+            Timber.tag("updateDbModel").e("This shall not happen. Settings are null.")
         } else {
             var isChanged = false
 
@@ -146,6 +193,19 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
         Thread.sleep(500)
         isUpdating.postValue(false)
+    }
+
+    /**
+     * Create DEFAULT db model if none.
+     */
+    private fun createNewDbDefaultModel(){
+        settings = Settings(DEFAULT_ID, DB_DEFAULT_LANGUAGE, DB_DEFAULT_ALLOW_NOTIFICATIONS, LocalTime.parse(DB_DEFAULT_NOTIFICATION_TIME), null)
+
+        settings?.let{
+            RealmHandlerObject.createDefaultSettings(it)
+        }?: kotlin.run {
+            Timber.e("App failed to create settings object.")
+        }
     }
 
     /**
@@ -209,15 +269,18 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         spnLanguage.adapter = languageArrayAdapter
 
         spnLanguage.setSelection(0)
-
-        hideTimeNotificationLayout()
     }
 
     private fun init() {
         RealmHandlerObject.initWithContext(this)
         settings = RealmHandlerObject.getDefaultSettings()
 
-        // init UI
+        if(settings == null){
+            Timber.i("Settings are not created yet. Default will be added")
+            createNewDbDefaultModel()
+        }
+
+        // set previously stored
         settings?.let {
             // set language
             val positionToSelect = languageArrayAdapter?.getPosition(it.language)
@@ -231,6 +294,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
             // set is checked
             switchShowNotif.isChecked = it.allowNotifications
+
+            if(!it.allowNotifications){
+                hideTimeNotificationLayout()
+            }
+
             // set time
             txtHours.text = it.notificationTime.hourOfDay.toString()
 
@@ -240,6 +308,8 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             } else {
                 txtMinutes.text = minuteString
             }
+        }?: kotlin.run {
+            Timber.e("Settings were not initialized, this shall not happen.")
         }
 
         isUpdating = MutableLiveData()
@@ -252,27 +322,101 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             }
         })
 
-        // download picture
-        //TODO: Use Util helper to construcr URL, use glide to load it, check internet connction before
-        val apiUrl = UtilHelper.getApiUrl(1, getHeight(), getWidth())
-        Timber.i("apiUrl = $apiUrl")
+        getDailyPictureAndSet()
+    }
 
-        // load it
+    /**
+     * Method which downloads new motivator picture from api and loads it into placeholder.
+     */
+    private fun getDailyPictureAndSet(){
+        Timber.i("Method = getDailyPictureAndSet")
+        if(UtilHelper.isConnected(this)) {
+            settings?.let {
+                it.lastDownloadAt?.let { lastDate ->
+                    if(UtilHelper.shouldLoadFromApiNew(lastDate)){
+                        downloadNewAndUpdateDb()
+                    } else {
+                        Timber.i("Picture already exists.")
+                        loadPictureAndStore(getLocalMotivatorFile().absolutePath)
+                    }
+                }?: kotlin.run {
+                    downloadNewAndUpdateDb()
+                }
+            }?: kotlin.run {
+                Timber.e("Settings are null, this shall not happen.")
+            }
+        } else {
+            Timber.e("Internet not connected.")
+        }
+    }
+
+    private fun downloadNewAndUpdateDb(){
+        Timber.i("New picture will be downloaded. height = ${getHeight()}, width = ${getWidth()}, Lang id = 1.")
+        val apiUrl = UtilHelper.getApiUrl(1, getHeight(), getWidth())
+        val lastDownloadedAt = Date()
+        Timber.i("apiUrl = $apiUrl.")
+
+        loadPictureAndStore(apiUrl)
+        launch(Dispatchers.IO) {
+            updateLastDownloadedAt(lastDownloadedAt)
+        }
+    }
+
+    /**
+     * Get picture from URL and store into file (prepare for sharing) and load it into placeholder of image.
+     */
+    private fun loadPictureAndStore(url: String){
         motivatorOfDay?.let {
             Glide
                 .with(this)
-                .load(apiUrl)
-                .optionalCenterCrop()
+                .load(url)
+                .centerInside()
+                .listener(object : RequestListener<Drawable> {
+                    override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean): Boolean {
+                        Timber.e("Resource failed to load.")
+                        return false
+                    }
+
+                    override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: DataSource?, isFirstResource: Boolean): Boolean {
+                        resource?.let { drawable ->
+                            val localFile = getLocalMotivatorFile()
+                            Timber.i("Path to store is ${localFile.absolutePath}")
+
+                            if (localFile.exists()) {
+                                localFile.delete()
+                            } else {
+                                localFile.parentFile?.mkdirs()
+                            }
+                            val bitmapWidth = resource.intrinsicWidth
+                            val bitmapHeight = resource.intrinsicHeight
+                            Timber.i("intrinsicWidth = $bitmapWidth, intrinsicHeight = $bitmapHeight.")
+
+                            if(bitmapWidth != -1 && bitmapHeight != -1) {
+                                Timber.i("Using intrinsic diameters to store the picture.")
+                                PictureLoaderHelper.writeBitmapToLocalFile(drawable.toBitmap(bitmapWidth, bitmapHeight, null), localFile)
+                            } else {
+                                Timber.i("Using params of screen to store the picture.")
+                                PictureLoaderHelper.writeBitmapToLocalFile(drawable.toBitmap(getWidth(), getHeight(), null), localFile)
+                            }
+                        }
+
+                        return true
+                    }
+
+                })
                 .into(it)
+        }?: kotlin.run {
+            Timber.e("Cannot load picture as ImageView has not been initialized.")
         }
     }
 
     private fun switchUi(){
-        var moveY: Float = if(sliderSettings.getIsContracted()){
+        val moveY: Float = if(sliderSettings.getIsContracted()){
             moveYtoDefaultPosition
         } else {
             -1f
         }
+        //TODO: we need to hide here first settings test
 
         ObjectAnimator.ofFloat(mainSliderGroup, "translationY", moveY).apply {
             duration = contractAnimationDurationSec
@@ -295,4 +439,6 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
         return size.x
     }
+
+    private fun getLocalMotivatorFile(): File = File(filesDir, "/images/$MOTIVATOR_NAME")
 }

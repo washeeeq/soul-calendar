@@ -1,7 +1,14 @@
 package org.allatra.calendar.util
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import org.allatra.calendar.common.EnumDefinition
 import org.joda.time.DateTime
+import timber.log.Timber
+import java.time.Instant
+import java.util.*
 
 object UtilHelper {
     /**
@@ -21,5 +28,40 @@ object UtilHelper {
         val date = DateTime.now()
         val screenResolution = "${screenHeight}x${screenWidth}"
         return "${EnumDefinition.API_URL}${EnumDefinition.API_PARAM_SC}=${screenResolution}&${EnumDefinition.API_PARAM_LI}=$languageId&day=${date.dayOfMonth().get()}&month=${date.monthOfYear().get()}&year=${date.year}"
+    }
+
+    /**
+     * Returns false when network is not connected.
+     * Returns true when network is active.
+     */
+    fun isConnected(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
+
+        cm?.let { connectivityM ->
+            if (Build.VERSION.SDK_INT < 23) {
+                return connectivityM.activeNetworkInfo != null && connectivityM.activeNetworkInfo.isConnected
+            } else {
+                val nc = connectivityM.getNetworkCapabilities(connectivityM.activeNetwork)
+
+                nc?.let {
+                    return it.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || it.hasTransport(
+                        NetworkCapabilities.TRANSPORT_WIFI)
+                }?: kotlin.run {
+                    Timber.e("System service Network capibilities returns null.")
+                    return false
+                }
+            }
+        }?: kotlin.run {
+            Timber.e("System service CONNECTIVITY_SERVICE returns null.")
+            return false
+        }
+    }
+
+    /**
+     * Check downloadedAt timestamp against new.
+     */
+    fun shouldLoadFromApiNew(downloadedAt: Date): Boolean {
+        val currentTime = Date()
+        return currentTime.day > downloadedAt.day
     }
 }
