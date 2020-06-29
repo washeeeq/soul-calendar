@@ -12,7 +12,9 @@
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/motivatorOfDay"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/horGuideLineStart"
@@ -70,8 +72,9 @@
             android:id="@+id/btnExpand"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            app:layout_constraintWidth_percent="0.25"
             app:layout_constraintHeight_percent="0.1"
-            android:src="@drawable/bg_expand_btn"
+            android:src="@drawable/icon_expand"
             android:background="@color/colorTransparent"
             android:scaleType="centerInside"
             app:layout_constraintStart_toStartOf="@id/verGuideLine1"

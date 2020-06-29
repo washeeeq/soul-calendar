@@ -11,6 +11,7 @@
     <string name="txt_default_minute">00</string>
     <string name="txt_div_min_hour">:</string>
     <string name="txt_default_hour">10</string>
+    <string name="txt_notification_arrived">New phrase arrived!</string>
     <string-array name="languages_image">
         <item>ru</item>
         <item>cancel</item>
