@@ -7,7 +7,6 @@ import android.os.Build
 import org.allatra.calendar.common.EnumDefinition
 import org.joda.time.DateTime
 import timber.log.Timber
-import java.time.Instant
 import java.util.*
 
 object UtilHelper {
@@ -62,6 +61,24 @@ object UtilHelper {
      */
     fun shouldLoadFromApiNew(downloadedAt: Date): Boolean {
         val currentTime = Date()
-        return currentTime.day > downloadedAt.day
+        val calendarCurrentTime = dateToCalendar(currentTime)
+        val calendarDownloadedAt = dateToCalendar(downloadedAt)
+
+        val dayDownloaded = calendarDownloadedAt.get(Calendar.DAY_OF_MONTH)
+        val dayOfNow = calendarCurrentTime.get(Calendar.DAY_OF_MONTH)
+
+        return if(calendarDownloadedAt.get(Calendar.MONTH) == calendarCurrentTime.get(Calendar.MONTH)
+            && calendarDownloadedAt.get(Calendar.YEAR) == calendarCurrentTime.get(Calendar.YEAR) ){
+            dayOfNow > dayDownloaded
+        } else {
+            true
+        }
+    }
+
+    //Convert Date to Calendar
+    private fun dateToCalendar(date: Date): Calendar {
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        return calendar
     }
 }

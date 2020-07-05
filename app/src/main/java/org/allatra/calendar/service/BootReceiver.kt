@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import org.allatra.calendar.db.RealmHandlerObject
 import timber.log.Timber
 import java.util.*
@@ -28,7 +29,19 @@ class BootReceiver: BroadcastReceiver() {
 
                         val alarmDate = calendar.time
 
-                        alarmManager.setExact(AlarmManager.RTC_WAKEUP, alarmDate.time, alarmIntent)
+                        Timber.i("Android version is ${Build.VERSION.SDK_INT}")
+                        if(Build.VERSION.SDK_INT >= 23){
+                            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
+                                calendar.timeInMillis,
+                                alarmIntent)
+                        } else {
+                            alarmManager.setRepeating(
+                                AlarmManager.RTC_WAKEUP,
+                                calendar.timeInMillis,
+                                1000 * 60 * 60 * 24,
+                                alarmIntent
+                            )
+                        }
                     }
                 }
             }?: kotlin.run {

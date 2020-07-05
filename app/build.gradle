@@ -54,4 +54,6 @@ dependencies {
     def work_version = "2.3.4"
     // Kotlin + coroutines
     implementation "androidx.work:work-runtime-ktx:$work_version"
+
+    implementation 'com.thelittlefireman:AppKillerManager:2.1.1'
 }

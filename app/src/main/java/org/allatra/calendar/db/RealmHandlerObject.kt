@@ -1,8 +1,10 @@
 package org.allatra.calendar.db
 
+import android.app.ActivityManager
 import android.content.Context
 import io.realm.Realm
 import io.realm.RealmConfiguration
+import io.realm.exceptions.RealmError
 import timber.log.Timber
 import java.util.*
 
@@ -19,6 +21,26 @@ object RealmHandlerObject {
     }
 
     private fun getInstance(): Realm{
+        return try {
+            returnInstance()
+        } catch (e: RealmError) {
+            return if (e.message!!.contains("Permission denied")) {
+                Timber.e("Got a permission denied, clearing user data.")
+                Realm.removeDefaultConfiguration()
+                (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).clearApplicationUserData()
+
+                try {
+                    returnInstance()
+                } catch (e: RealmError) {
+                    Realm.getDefaultInstance()
+                }
+            } else {
+                Realm.getDefaultInstance()
+            }
+        }
+    }
+
+    private fun returnInstance(): Realm{
         Realm.init(context)
         val config = RealmConfiguration.Builder()
             .name(APP_REAL_NAME)

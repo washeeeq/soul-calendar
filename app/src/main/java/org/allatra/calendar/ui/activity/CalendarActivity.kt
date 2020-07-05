@@ -1,16 +1,23 @@
 package org.allatra.calendar.ui.activity
 
+import android.Manifest
 import android.animation.ObjectAnimator
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Point
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
 import android.view.View
 import android.widget.ArrayAdapter
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.MutableLiveData
@@ -20,6 +27,8 @@ import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.thelittlefireman.appkillermanager.managers.KillerManager
+import com.thelittlefireman.appkillermanager.ui.DialogKillerManagerBuilder
 import kotlinx.android.synthetic.main.activity_calendar.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,8 +48,7 @@ import timber.log.Timber
 import java.io.File
 import java.util.*
 
-
-class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(Dispatchers.Default) {
+class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(Dispatchers.Default), ActivityCompat.OnRequestPermissionsResultCallback {
     private var moveYtoDefaultPosition: Float = 0f
     private val contractAnimationDurationSec = 700L
     private val hideAnimationTimeNotifLayoutDuration = 500L
@@ -60,9 +68,6 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         private const val DB_DEFAULT_ALLOW_NOTIFICATIONS = false
         private const val DB_DEFAULT_NOTIFICATION_TIME = "10:00"
         private const val DB_DEFAULT_LANGUAGE = "ru"
-
-        const val NOTIF_HOUR = "notif_hour"
-        const val NOTIF_MINUTE = "notif_minute"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,7 +78,6 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             Timber.plant(Timber.DebugTree())
         }
 
-        initUi()
         init()
 
         /**
@@ -88,10 +92,12 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         /**
          * Hide/Show notification settings.
          */
-        switchShowNotif?.setOnCheckedChangeListener { buttonView, isChecked ->
+        switchShowNotif?.setOnCheckedChangeListener { _, isChecked ->
             // show time
             if(isChecked){
                 showTimeNotificationLayout()
+                // request permissions
+                val dialog = DialogKillerManagerBuilder().setContext(this).setAction(KillerManager.Actions.ACTION_POWERSAVING).show()
             }
             // hide
             else {
@@ -112,17 +118,17 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                 minute = it.minuteOfHour
             }
 
-            val timePickerDialog = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { view, hourOfDay, minute ->
-                if(hourOfDay < 10){
-                    txtHours.text = "0${hourOfDay.toString()}"
+            val timePickerDialog = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { view, setHour, setMinute ->
+                if(setHour < 10){
+                    txtHours.text = "0${setHour.toString()}"
                 } else {
-                    txtHours.text = hourOfDay.toString()
+                    txtHours.text = setHour.toString()
                 }
 
-                if(minute < 10){
-                    txtMinutes.text = "0${minute.toString()}"
+                if(setMinute < 10){
+                    txtMinutes.text = "0${setMinute.toString()}"
                 } else {
-                    txtMinutes.text = minute.toString()
+                    txtMinutes.text = setMinute.toString()
                 }
 
             }, hourOfDay, minute, true)
@@ -171,10 +177,30 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        permissions.forEachIndexed() { index, permissionString ->
+            if(permissionString.equals(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)){
+                if(grantResults[index].equals(PackageManager.PERMISSION_GRANTED)){
+                    Timber.i("Permission granted!!")
+                } else {
+                    //TODO: Tell user it will not receive notifs.
+                    Timber.w("Notifications will not be sent!")
+                }
+            }
+        }
+    }
+
     /**
      * When app is resumed, get new daily picture and set.
      */
     override fun onResume() {
+        Timber.tag("onResume").i("Status -> Resumed.")
         super.onResume()
 
         // we load picture only here
@@ -235,7 +261,6 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
     private fun registerBroadCastReceiver(){
         wakefulReceiver = WakefulReceiver()
-        wakefulReceiver?.init(this)
         registerReceiver(wakefulReceiver, IntentFilter(WAKE_RECEIVE_NOTIF))
     }
 
@@ -245,7 +270,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
     private fun scheduleNotifications(){
         settings?.notificationTime?.let {
-            wakefulReceiver?.setAlarm(applicationContext, it.hourOfDay, it.minuteOfHour, 0)
+            wakefulReceiver?.setAlarm(applicationContext, it.hourOfDay, it.minuteOfHour)
         }
     }
 
@@ -307,7 +332,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             .duration = hideAnimationTimeNotifLayoutDuration
     }
 
-    private fun initUi(){
+    private fun init(){
         moveYtoDefaultPosition = (getHeight().div(2)) * 0.8f
         itemElementHeight = (getHeight().div(2)) * 0.105f
 
@@ -323,9 +348,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         spnLanguage.adapter = languageArrayAdapter
 
         spnLanguage.setSelection(0)
-    }
 
-    private fun init() {
         RealmHandlerObject.initWithContext(this)
         settings = RealmHandlerObject.getDefaultSettings()
 
@@ -336,6 +359,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
         // set previously stored
         settings?.let {
+            Timber.i("Settings existing and will set up UI.")
             // set language
             val positionToSelect = languageArrayAdapter?.getPosition(it.language)
             positionToSelect?.let { position ->
@@ -355,15 +379,14 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                 showTimeNotificationLayout()
             }
 
-            // set time
-            txtHours.text = it.notificationTime.hourOfDay.toString()
+            // set time / hour and minute
+            txtHours.text = if(it.notificationTime.hourOfDay < 10){
+                "0${it.notificationTime.hourOfDay}"
+            } else {it.notificationTime.hourOfDay.toString()}
 
-            val minuteString = it.notificationTime.minuteOfHour.toString()
-            if(minuteString.equals("0")){
-                txtMinutes.text = "00"
-            } else {
-                txtMinutes.text = minuteString
-            }
+            txtMinutes.text = if(it.notificationTime.minuteOfHour < 10){
+                "0${it.notificationTime.minuteOfHour}"
+            } else {it.notificationTime.minuteOfHour.toString()}
         }?: kotlin.run {
             Timber.e("Settings were not initialized, this shall not happen.")
         }
@@ -389,10 +412,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         settings?.let {
             it.lastDownloadAt?.let { lastDate ->
                 if(UtilHelper.shouldLoadFromApiNew(lastDate)){
+                    Timber.i("Shall load new picture.")
                     deletePreviousPicture()
                     downloadNewAndUpdateDb()
                 } else {
-                    Timber.i("Picture already exists.")
+                    Timber.i("Picture already exists, will load.")
                     loadPictureFromStorage(getLocalMotivatorFile().absolutePath)
                 }
             }?: kotlin.run {
