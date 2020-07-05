@@ -4,18 +4,17 @@ import android.animation.ObjectAnimator
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+import android.content.IntentFilter
 import android.graphics.Point
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.animation.doOnEnd
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import androidx.work.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
@@ -31,15 +30,14 @@ import org.allatra.calendar.R
 import org.allatra.calendar.db.RealmHandlerObject
 import org.allatra.calendar.db.RealmHandlerObject.DEFAULT_ID
 import org.allatra.calendar.db.Settings
-import org.allatra.calendar.service.NotificationWorker
+import org.allatra.calendar.service.WakefulReceiver
+import org.allatra.calendar.service.WakefulReceiver.Companion.WAKE_RECEIVE_NOTIF
 import org.allatra.calendar.util.PictureLoaderHelper
 import org.allatra.calendar.util.UtilHelper
 import org.joda.time.LocalTime
 import timber.log.Timber
 import java.io.File
-import java.time.Duration
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(Dispatchers.Default) {
@@ -51,6 +49,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private var settings: Settings? = null
     private lateinit var isUpdating: MutableLiveData<Boolean>
     private var languageArrayAdapter: ArrayAdapter<CharSequence>? = null
+    private var wakefulReceiver: WakefulReceiver? = null
 
     companion object {
         private const val MOTIVATOR_NAME = "motivator_of_the_day.jpeg"
@@ -106,6 +105,13 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         timeNotificationLayoutGroup.setOnClickListener {
             Timber.i("User clicked on the timeNotificationLayoutGroup layout.")
 
+            var hourOfDay = 10
+            var minute = 10
+            settings?.notificationTime?.let {
+                hourOfDay = it.hourOfDay
+                minute = it.minuteOfHour
+            }
+
             val timePickerDialog = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { view, hourOfDay, minute ->
                 if(hourOfDay < 10){
                     txtHours.text = "0${hourOfDay.toString()}"
@@ -119,7 +125,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     txtMinutes.text = minute.toString()
                 }
 
-            }, 10, 0, true)
+            }, hourOfDay, minute, true)
             timePickerDialog.show()
         }
 
@@ -175,6 +181,12 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         getDailyPictureAndSet()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // deregister on quit
+        unregisterReceiver(wakefulReceiver)
+    }
+
     private suspend fun updateLastDownloadedAt(lastDownloadedAt: Date) = withContext(Dispatchers.IO) {
         RealmHandlerObject.updateDefaultSettings(lastDownloadedAt)
     }
@@ -208,9 +220,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
                     RealmHandlerObject.updateDefaultSettings(it)
 
-                    //TODO: Remove notifications
-                    //Register new:
-                    createWorkRequest()
+                    if(allowNotifications) {
+                        scheduleNotifications()
+                    } else {
+                        removeNotificationsSchedule()
+                    }
                 }
             }
         }
@@ -219,35 +233,19 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         isUpdating.postValue(false)
     }
 
-    private fun createWorkRequest(){
+    private fun registerBroadCastReceiver(){
+        wakefulReceiver = WakefulReceiver()
+        wakefulReceiver?.init(this)
+        registerReceiver(wakefulReceiver, IntentFilter(WAKE_RECEIVE_NOTIF))
+    }
+
+    private fun removeNotificationsSchedule(){
+        wakefulReceiver?.cancelAlarm(applicationContext)
+    }
+
+    private fun scheduleNotifications(){
         settings?.notificationTime?.let {
-            val currentDate = Calendar.getInstance()
-            val dueDate = Calendar.getInstance()
-
-            // Set Execution around 05:00:00 AM
-            dueDate.set(Calendar.HOUR_OF_DAY, it.hourOfDay)
-            dueDate.set(Calendar.MINUTE, it.minuteOfHour)
-            dueDate.set(Calendar.SECOND, 0)
-
-            if (dueDate.before(currentDate)) {
-                dueDate.add(Calendar.HOUR_OF_DAY, 24)
-            }
-
-            val timeDiff = dueDate.timeInMillis.minus(currentDate.timeInMillis)
-
-            val dailyWorkRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
-                .setInitialDelay(timeDiff, TimeUnit.MILLISECONDS)
-                .build()
-
-            // Put time there
-            val data = Data.Builder()
-            data.putInt(NOTIF_HOUR, it.hourOfDay)
-            data.putInt(NOTIF_MINUTE, it.minuteOfHour)
-
-            WorkManager.getInstance(this).enqueue(dailyWorkRequest)
-            Timber.i("Work has been scheduled for ${it.hourOfDay}:${it.minuteOfHour} from CalendarActivity.")
-        }?.let {
-            Timber.e("Work request cannot be created.")
+            wakefulReceiver?.setAlarm(applicationContext, it.hourOfDay, it.minuteOfHour, 0)
         }
     }
 
@@ -379,6 +377,8 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                 loader.hide()
             }
         })
+
+        registerBroadCastReceiver()
     }
 
     /**
