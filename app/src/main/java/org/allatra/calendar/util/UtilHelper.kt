@@ -62,6 +62,7 @@ object UtilHelper {
     fun shouldLoadFromApiNew(downloadedAt: Date): Boolean {
         val currentTime = Date()
         val calendarCurrentTime = dateToCalendar(currentTime)
+
         val calendarDownloadedAt = dateToCalendar(downloadedAt)
 
         val dayDownloaded = calendarDownloadedAt.get(Calendar.DAY_OF_MONTH)

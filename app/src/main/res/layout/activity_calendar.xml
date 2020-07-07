@@ -87,7 +87,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.15" />
+            app:layout_constraintGuide_percent="0.18" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/txtSettings"
@@ -109,7 +109,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.26" />
+            app:layout_constraintGuide_percent="0.29" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/languageLayoutGroup"
@@ -199,7 +199,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.365" />
+            app:layout_constraintGuide_percent="0.395" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/notificationLayoutGroup"
@@ -273,7 +273,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.47" />
+            app:layout_constraintGuide_percent="0.5" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/timeNotificationLayoutGroup"
@@ -389,7 +389,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.575" />
+            app:layout_constraintGuide_percent="0.6055" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/shareLayoutGroup"

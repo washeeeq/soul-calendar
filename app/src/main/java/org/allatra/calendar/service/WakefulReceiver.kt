@@ -43,6 +43,7 @@ class WakefulReceiver: BroadcastReceiver() {
     fun setAlarm(appContext: Context, hour: Int, minute: Int){
         Timber.i("Setting up alarm for: $hour:$minute.")
 
+        //TODO> check if to call cancel maybe
         alarmManager = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         alarmManager?.let {

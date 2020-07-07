@@ -89,7 +89,7 @@ object RealmHandlerObject {
                 settingsDAO.setLastDownloadAt(lastDownloadedAt)
 
                 realm.copyToRealm(settingsDAO)
-                Timber.tag("updateDefaultSettings").i("Db object SettingsDAO was updated. Object = ${settingsDAO.toString()}")
+                Timber.tag("updateDefaultSettings").i("Db object SettingsDAO was updated. SettingsDAO = { AllowNotifications = ${settingsDAO.getAllowNotifications()}, LastDownloadAt = ${settingsDAO.getLastDownloadAt()}, NotificationTime = ${settingsDAO.getNotificationTime()}}")
             }
 
             close(realm)

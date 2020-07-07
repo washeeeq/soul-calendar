@@ -416,7 +416,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     deletePreviousPicture()
                     downloadNewAndUpdateDb()
                 } else {
-                    Timber.i("Picture already exists, will load.")
+                    Timber.i("Picture already exists on storage, will load.")
                     loadPictureFromStorage(getLocalMotivatorFile().absolutePath)
                 }
             }?: kotlin.run {
@@ -431,8 +431,15 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         val localFile = getLocalMotivatorFile()
 
         if(localFile.exists()){
-            Timber.i("Motivator exists - deleting.")
-            localFile.delete()
+            val deleted = localFile.delete()
+
+            if(deleted){
+                Timber.i("File exists on the storage: ${localFile.absolutePath} and has been successfully deleted.")
+            } else {
+                Timber.e("File exists on the storage: ${localFile.absolutePath} but could not be deleted.")
+            }
+        } else {
+            Timber.e("File = ${localFile.absolutePath} does not exists on the storage!")
         }
     }
 
@@ -442,13 +449,9 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private fun downloadNewAndUpdateDb(){
         Timber.i("New picture will be downloaded. height = ${getHeight()}, width = ${getWidth()}, Lang id = 1.")
         val apiUrl = UtilHelper.getApiUrl(1, getHeight(), getWidth())
-        val lastDownloadedAt = Date()
         Timber.i("apiUrl = $apiUrl.")
 
         loadPictureAndStore(apiUrl)
-        launch(Dispatchers.IO) {
-            updateLastDownloadedAt(lastDownloadedAt)
-        }
     }
 
     private fun loadPictureFromStorage(url: String){
@@ -485,11 +488,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                                     val localFile = getLocalMotivatorFile()
                                     Timber.i("Path to store is ${localFile.absolutePath}")
 
-                                    if (localFile.exists()) {
-                                        localFile.delete()
-                                    } else {
+                                    if (!localFile.exists()) {
+                                        Timber.i("File was not created let us create parent dir.")
                                         localFile.parentFile?.mkdirs()
                                     }
+
                                     val bitmapWidth = resource.intrinsicWidth
                                     val bitmapHeight = resource.intrinsicHeight
                                     Timber.i("intrinsicWidth = $bitmapWidth, intrinsicHeight = $bitmapHeight.")
@@ -512,6 +515,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                                                 null
                                             ), localFile
                                         )
+                                    }
+
+                                    launch(Dispatchers.IO) {
+                                        val lastDownloadedAt = Date()
+                                        updateLastDownloadedAt(lastDownloadedAt)
                                     }
                                 } else {
                                     Timber.w("Not need to store new motivator. Path to load = $url.")
@@ -542,18 +550,6 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
         mainSliderGroup.animate()
             .translationY(moveY)
-            .withEndAction { Runnable {
-                if(moveY == -1f){
-                    sliderSettings?.visibility = View.GONE
-                    Timber.d("Settings hidding...")
-                }
-            } }
-            .withStartAction{ Runnable {
-                if(moveY == moveYtoDefaultPosition){
-                    sliderSettings?.visibility = View.VISIBLE
-                    Timber.d("Settings to visible...")
-                }
-            }}
             .duration = contractAnimationDurationSec
     }
 
