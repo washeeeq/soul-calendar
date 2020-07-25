@@ -14,8 +14,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import org.allatra.calendar.R
 import org.allatra.calendar.ui.activity.CalendarActivity
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import timber.log.Timber
-import java.util.*
 
 class WakefulReceiver: BroadcastReceiver() {
     private var alarmManager: AlarmManager? = null
@@ -26,6 +27,7 @@ class WakefulReceiver: BroadcastReceiver() {
         private const val CHANNEL_ID = "CHANNEL_NOTIF_124"
         private const val CHANNEL_NAME = "CHANNEL_NOTIF_SOUL_CAL"
         private const val NOTIFICATION_ID_DEFAULT = 1
+        private const val TIME_FORMAT_ALARM_DATE = "MM-dd-yyyy HH:mm"
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -43,35 +45,49 @@ class WakefulReceiver: BroadcastReceiver() {
     fun setAlarm(appContext: Context, hour: Int, minute: Int){
         Timber.i("Setting up alarm for: $hour:$minute.")
 
-        //TODO> check if to call cancel maybe
         alarmManager = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         alarmManager?.let {
             val alarmIntent = Intent(appContext, WakefulReceiver::class.java).let { intent ->
+                intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
                 PendingIntent.getBroadcast(appContext, 0, intent, 0)
             }
 
-            // Set the alarm to start at particular time
-            val calendar: Calendar = Calendar.getInstance().apply {
-                timeInMillis = System.currentTimeMillis()
-                set(Calendar.HOUR_OF_DAY, hour)
-                set(Calendar.MINUTE, minute)
+            val datetimeNow = DateTime.now()
+            val dateTimeFormatter = DateTimeFormat.forPattern(TIME_FORMAT_ALARM_DATE)
+            var alarmDateTime = DateTime.parse("${datetimeNow.monthOfYear}-${datetimeNow.dayOfMonth}-${datetimeNow.year} ${hour}:${minute}", dateTimeFormatter)
+
+            if(alarmDateTime.isBefore(datetimeNow)){
+                alarmDateTime = DateTime.parse("${datetimeNow.monthOfYear}-${datetimeNow.dayOfMonth+1}-${datetimeNow.year} ${hour}:${minute}", dateTimeFormatter)
             }
 
             // setRepeating() lets you specify a precise custom interval--in this case,
             // 24 h
-            Timber.i("Android version is ${Build.VERSION.SDK_INT}")
-            if(Build.VERSION.SDK_INT >= 23){
-                it.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    alarmIntent)
-            } else {
-                it.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    1000 * 60 * 60 * 24,
-                    alarmIntent
-                )
+            Timber.d("Android version is ${Build.VERSION.SDK_INT}")
+            when{
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP -> {
+                    it.setExact(AlarmManager.RTC_WAKEUP,
+                        alarmDateTime.millis,
+                        alarmIntent)
+                }
+
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.VERSION.SDK_INT < Build.VERSION_CODES.M -> {
+                    it.setAlarmClock(AlarmManager.AlarmClockInfo(alarmDateTime.millis, alarmIntent), alarmIntent)
+                }
+
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.M -> {
+                    it.setExact(AlarmManager.RTC_WAKEUP,
+                        alarmDateTime.millis,
+                        alarmIntent)
+                }
+
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
+                    it.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        alarmDateTime.millis,
+                        alarmIntent
+                    )
+                }
             }
 
             val receiver = ComponentName(appContext, BootReceiver::class.java)

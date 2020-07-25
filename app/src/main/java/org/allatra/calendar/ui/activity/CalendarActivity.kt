@@ -9,15 +9,11 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Point
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
 import android.view.View
 import android.widget.ArrayAdapter
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.MutableLiveData
@@ -27,6 +23,7 @@ import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.google.android.material.snackbar.Snackbar
 import com.thelittlefireman.appkillermanager.managers.KillerManager
 import com.thelittlefireman.appkillermanager.ui.DialogKillerManagerBuilder
 import kotlinx.android.synthetic.main.activity_calendar.*
@@ -148,7 +145,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         btnSave.setOnClickListener {
             isUpdating.postValue(true)
             launch(Dispatchers.IO) {
-                updateDbModel()
+                updateDbAndSchedule()
             }
 
             showOrHideSettings()
@@ -172,7 +169,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
             }?: kotlin.run {
                 Timber.e("Drawable is null, no sharing can be done.")
-                //TODO: check if to show user message
+                showCustomMessage(getString(R.string.txt_error_no_picture_saved))
             }
         }
     }
@@ -189,7 +186,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                 if(grantResults[index].equals(PackageManager.PERMISSION_GRANTED)){
                     Timber.i("Permission granted!!")
                 } else {
-                    //TODO: Tell user it will not receive notifs.
+                    showCustomMessage(getString(R.string.txt_warn_no_notifications_will_deliver))
                     Timber.w("Notifications will not be sent!")
                 }
             }
@@ -217,7 +214,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         RealmHandlerObject.updateDefaultSettings(lastDownloadedAt)
     }
 
-    private suspend fun updateDbModel() = withContext(Dispatchers.IO) {
+    private suspend fun updateDbAndSchedule() = withContext(Dispatchers.IO) {
         val languageString = spnLanguage.selectedItem.toString()
         val allowNotifications = switchShowNotif.isChecked
         val notificationTimeString = "${txtHours.text}${txtDivider.text}${txtMinutes.text}"
@@ -247,6 +244,9 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     RealmHandlerObject.updateDefaultSettings(it)
 
                     if(allowNotifications) {
+                        // remove previous
+                        removeNotificationsSchedule()
+                        // schedule new
                         scheduleNotifications()
                     } else {
                         removeNotificationsSchedule()
@@ -271,6 +271,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private fun scheduleNotifications(){
         settings?.notificationTime?.let {
             wakefulReceiver?.setAlarm(applicationContext, it.hourOfDay, it.minuteOfHour)
+            Timber.i("Notification was scheduled.")
         }
     }
 
@@ -570,4 +571,10 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     }
 
     private fun getLocalMotivatorFile(): File = File(filesDir, "/images/$MOTIVATOR_NAME")
+
+    private fun showCustomMessage(stringMessage: String){
+        val snackBar: Snackbar = Snackbar
+            .make(rootLayout, stringMessage, Snackbar.LENGTH_LONG)
+        snackBar.show()
+    }
 }

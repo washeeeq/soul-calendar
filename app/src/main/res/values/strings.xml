@@ -12,6 +12,8 @@
     <string name="txt_div_min_hour">:</string>
     <string name="txt_default_hour">10</string>
     <string name="txt_notification_arrived">New phrase arrived!</string>
+    <string name="txt_error_no_picture_saved">No picture saved, please connect to WIFI or use local data provider.</string>
+    <string name="txt_warn_no_notifications_will_deliver">No notifications will be delivered!</string>
     <string-array name="languages_image">
         <item>ru</item>
         <item>cancel</item>
