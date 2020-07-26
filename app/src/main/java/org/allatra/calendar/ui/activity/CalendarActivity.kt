@@ -11,6 +11,7 @@ import android.graphics.Point
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -347,8 +348,28 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         languageArrayAdapter = ArrayAdapter.createFromResource(this, R.array.languages_image, R.layout.custom_spinner_textview)
         (languageArrayAdapter as ArrayAdapter<CharSequence>).setDropDownViewResource(R.layout.custom_spinner_dropdown_item)
         spnLanguage.adapter = languageArrayAdapter
-
         spnLanguage.setSelection(0)
+        spnLanguage.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // nothing here
+            }
+
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                val stringValue = parent?.getItemAtPosition(position) as String
+                val stringCancelValue = languageArrayAdapter?.getItem(1).toString()
+
+                if(stringValue.equals(stringCancelValue)){
+                    Timber.i("User cancelled, back to RU.")
+                    spnLanguage.setSelection(0, false)
+                }
+            }
+
+        }
 
         RealmHandlerObject.initWithContext(this)
         settings = RealmHandlerObject.getDefaultSettings()

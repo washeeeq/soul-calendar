@@ -182,7 +182,7 @@ class WakefulReceiver: BroadcastReceiver() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
                 // https://notificationsounds.com/message-tones/demonstrative-516
             .setSound(Uri.parse("android.resource://"
-                    + context.packageName + "/" + R.raw.demonstrative))
+                    + context.packageName + "/" + R.raw.slow_spring_board))
 
         notificationManagerCompat.notify(
             currentNotificationIdNumber,
