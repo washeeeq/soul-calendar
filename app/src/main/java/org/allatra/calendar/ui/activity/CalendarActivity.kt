@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.graphics.Point
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -260,9 +261,19 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         isUpdating.postValue(false)
     }
 
-    private fun registerBroadCastReceiver(){
+    private fun registerBroadCastReceiverAndSchedule(){
         wakefulReceiver = WakefulReceiver()
         registerReceiver(wakefulReceiver, IntentFilter(WAKE_RECEIVE_NOTIF))
+
+        // schedule notifications
+        settings?.let {
+            if(it.allowNotifications){
+                // remove previous
+                removeNotificationsSchedule()
+                // schedule new
+                scheduleNotifications()
+            }
+        }
     }
 
     private fun removeNotificationsSchedule(){
@@ -423,7 +434,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             }
         })
 
-        registerBroadCastReceiver()
+        registerBroadCastReceiverAndSchedule()
     }
 
     /**
@@ -565,9 +576,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
     private fun switchUi(){
         val moveY: Float = if(sliderSettings.getIsContracted()){
+            Timber.i("Will hide settings.")
             moveYtoDefaultPosition
         } else {
-            -1f
+            Timber.i("Will show settings.")
+            1f
         }
 
         mainSliderGroup.animate()

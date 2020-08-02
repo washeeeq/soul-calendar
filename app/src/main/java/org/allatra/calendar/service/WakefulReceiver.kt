@@ -3,10 +3,8 @@ package org.allatra.calendar.service
 import android.app.*
 import android.app.NotificationManager.IMPORTANCE_HIGH
 import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
@@ -27,7 +25,7 @@ class WakefulReceiver: BroadcastReceiver() {
         private const val CHANNEL_ID = "CHANNEL_NOTIF_124"
         private const val CHANNEL_NAME = "CHANNEL_NOTIF_SOUL_CAL"
         private const val NOTIFICATION_ID_DEFAULT = 1
-        private const val TIME_FORMAT_ALARM_DATE = "MM-dd-yyyy HH:mm"
+        const val TIME_FORMAT_ALARM_DATE = "MM-dd-yyyy HH:mm"
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -89,15 +87,6 @@ class WakefulReceiver: BroadcastReceiver() {
                     )
                 }
             }
-
-            val receiver = ComponentName(appContext, BootReceiver::class.java)
-            // Enable {@code BootReceiver} to automatically restart when the
-            // device is rebooted.
-            appContext.packageManager.setComponentEnabledSetting(
-                receiver,
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP
-            )
         }?: kotlin.run {
             Timber.e("Instance of mAlarmManager is null.")
         }
@@ -116,13 +105,6 @@ class WakefulReceiver: BroadcastReceiver() {
             val alarmIntent = PendingIntent.getBroadcast(appContext, 0, intent, 0)
 
             it.cancel(alarmIntent)
-
-            val receiver = ComponentName(appContext, BootReceiver::class.java)
-            val pm = appContext.packageManager
-            pm.setComponentEnabledSetting(
-                receiver, PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP
-            )
         }?: kotlin.run {
             Timber.e("Instance of mAlarmManager is null.")
         }
