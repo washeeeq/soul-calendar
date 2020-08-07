@@ -2,18 +2,18 @@
     <string name="app_name">Календарь для души</string>
     <string name="splash_screen_desc">Изображение заставки</string>
     <string name="txt_settings">Настройки</string>
-    <string name="txt_select_language">Выберите язык фраз</string>
+    <string name="txt_select_language">Выберите язык для цитат</string>
     <string name="txt_allow_notifications">Разрешить ежедневные уведомления</string>
-    <string name="txt_time_of_notification">Время прибытия</string>
+    <string name="txt_time_of_notification">Время уведомления</string>
     <string name="txt_share">Поделится</string>
-    <string name="txt_btn_cancel">Отмена</string>
+    <string name="txt_btn_cancel">Отменить</string>
     <string name="txt_btn_save">Сохранить</string>
     <string name="txt_default_minute">00</string>
     <string name="txt_div_min_hour">:</string>
     <string name="txt_default_hour">10</string>
-    <string name="txt_notification_arrived">Новая фраза прибыла!</string>
-    <string name="txt_error_no_picture_saved">Изображение не сохранено, пожалуйста, подключитесь к WIFI или воспользуйтесь местным поставщиком данных.</string>
-    <string name="txt_warn_no_notifications_will_deliver">Уведомления не будут доставлены!</string>
+    <string name="txt_notification_arrived">Ура! Новая фраза дня!</string>
+    <string name="txt_error_no_picture_saved">Картинка не сохраняется. Пожалуйста, подключитесь к Wi-Fi или используйте мобильный интернет Вашего оператора связи.</string>
+    <string name="txt_warn_no_notifications_will_deliver">Никаких уведомлений отображаться не будет!</string>
     <string-array name="languages_image">
         <item>Рус</item>
         <item>Отменить</item>
