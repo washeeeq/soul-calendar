@@ -16,7 +16,7 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import timber.log.Timber
 
-class WakefulReceiver: BroadcastReceiver() {
+class WakefulReceiver : BroadcastReceiver() {
     private var alarmManager: AlarmManager? = null
     private var currentNotificationIdNumber = 0
 
@@ -32,7 +32,7 @@ class WakefulReceiver: BroadcastReceiver() {
         context?.let {
             createNotificationChannel(it)
             sendNewNotification(it)
-        }?: kotlin.run {
+        } ?: kotlin.run {
             Timber.e("Cannot fire the notification. Context is null!")
         }
     }
@@ -40,7 +40,7 @@ class WakefulReceiver: BroadcastReceiver() {
     /**
      * Sets the alarm on particular hour:minute:second.
      */
-    fun setAlarm(appContext: Context, hour: Int, minute: Int){
+    fun setAlarm(appContext: Context, hour: Int, minute: Int) {
         Timber.i("Setting up alarm for: $hour:$minute.")
 
         alarmManager = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -53,20 +53,22 @@ class WakefulReceiver: BroadcastReceiver() {
 
             val datetimeNow = DateTime.now()
             val dateTimeFormatter = DateTimeFormat.forPattern(TIME_FORMAT_ALARM_DATE)
-            var alarmDateTime = DateTime.parse("${datetimeNow.monthOfYear}-${datetimeNow.dayOfMonth}-${datetimeNow.year} ${hour}:${minute}", dateTimeFormatter)
+            var alarmDateTime = DateTime.parse("${datetimeNow.monthOfYear}-${datetimeNow.dayOfMonth}-${datetimeNow.year} $hour:$minute", dateTimeFormatter)
 
-            if(alarmDateTime.isBefore(datetimeNow)){
-                alarmDateTime = DateTime.parse("${datetimeNow.monthOfYear}-${datetimeNow.dayOfMonth+1}-${datetimeNow.year} ${hour}:${minute}", dateTimeFormatter)
+            if (alarmDateTime.isBefore(datetimeNow)) {
+                alarmDateTime = DateTime.parse("${datetimeNow.monthOfYear}-${datetimeNow.dayOfMonth + 1}-${datetimeNow.year} $hour:$minute", dateTimeFormatter)
             }
 
             // setRepeating() lets you specify a precise custom interval--in this case,
             // 24 h
             Timber.d("Android version is ${Build.VERSION.SDK_INT}")
-            when{
+            when {
                 Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP -> {
-                    it.setExact(AlarmManager.RTC_WAKEUP,
+                    it.setExact(
+                        AlarmManager.RTC_WAKEUP,
                         alarmDateTime.millis,
-                        alarmIntent)
+                        alarmIntent
+                    )
                 }
 
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.VERSION.SDK_INT < Build.VERSION_CODES.M -> {
@@ -74,9 +76,11 @@ class WakefulReceiver: BroadcastReceiver() {
                 }
 
                 Build.VERSION.SDK_INT < Build.VERSION_CODES.M -> {
-                    it.setExact(AlarmManager.RTC_WAKEUP,
+                    it.setExact(
+                        AlarmManager.RTC_WAKEUP,
                         alarmDateTime.millis,
-                        alarmIntent)
+                        alarmIntent
+                    )
                 }
 
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
@@ -87,7 +91,7 @@ class WakefulReceiver: BroadcastReceiver() {
                     )
                 }
             }
-        }?: kotlin.run {
+        } ?: kotlin.run {
             Timber.e("Instance of mAlarmManager is null.")
         }
     }
@@ -95,7 +99,7 @@ class WakefulReceiver: BroadcastReceiver() {
     /**
      * Cancel alarm and clean.
      */
-    fun cancelAlarm(appContext: Context){
+    fun cancelAlarm(appContext: Context) {
         Timber.i("Cancelling alarm.")
 
         alarmManager = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -105,7 +109,7 @@ class WakefulReceiver: BroadcastReceiver() {
             val alarmIntent = PendingIntent.getBroadcast(appContext, 0, intent, 0)
 
             it.cancel(alarmIntent)
-        }?: kotlin.run {
+        } ?: kotlin.run {
             Timber.e("Instance of mAlarmManager is null.")
         }
     }
@@ -114,7 +118,7 @@ class WakefulReceiver: BroadcastReceiver() {
      * Creates a notification channel.
      */
     private fun createNotificationChannel(context: Context) {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
@@ -162,9 +166,13 @@ class WakefulReceiver: BroadcastReceiver() {
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-                // https://notificationsounds.com/message-tones/demonstrative-516
-            .setSound(Uri.parse("android.resource://"
-                    + context.packageName + "/" + R.raw.slow_spring_board))
+            // https://notificationsounds.com/message-tones/demonstrative-516
+            .setSound(
+                Uri.parse(
+                    "android.resource://" +
+                        context.packageName + "/" + R.raw.slow_spring_board
+                )
+            )
 
         notificationManagerCompat.notify(
             currentNotificationIdNumber,

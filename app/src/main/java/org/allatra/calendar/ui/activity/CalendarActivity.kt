@@ -93,7 +93,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
          */
         switchShowNotif?.setOnCheckedChangeListener { _, isChecked ->
             // show time
-            if(isChecked){
+            if (isChecked) {
                 showTimeNotificationLayout()
                 // request permissions
                 val dialog = DialogKillerManagerBuilder().setContext(this).setAction(KillerManager.Actions.ACTION_POWERSAVING).show()
@@ -420,7 +420,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             txtMinutes.text = if(it.notificationTime.minuteOfHour < 10){
                 "0${it.notificationTime.minuteOfHour}"
             } else {it.notificationTime.minuteOfHour.toString()}
-        }?: kotlin.run {
+        } ?: kotlin.run {
             Timber.e("Settings were not initialized, this shall not happen.")
         }
 
@@ -440,7 +440,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     /**
      * Method which downloads new motivator picture from api and loads it into placeholder.
      */
-    private fun getDailyPictureAndSet(){
+    private fun getDailyPictureAndSet() {
         Timber.i("Method = getDailyPictureAndSet")
         settings?.let {
             it.lastDownloadAt?.let { lastDate ->
@@ -502,8 +502,8 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     /**
      * Get picture from URL and store into file (prepare for sharing) and load it into placeholder of image.
      */
-    private fun loadPictureAndStore(url: String){
-        if(UtilHelper.isConnected(this)) {
+    private fun loadPictureAndStore(url: String) {
+        if (UtilHelper.isConnected(this)) {
             motivatorOfDay?.let {
                 Glide
                     .with(this)
@@ -517,7 +517,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
                         override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: DataSource?, isFirstResource: Boolean): Boolean {
                             resource?.let { drawable ->
-                                if(url.contains(HTTP_CONST)) {
+                                if (url.contains(HTTP_CONST)) {
                                     val localFile = getLocalMotivatorFile()
                                     Timber.i("Path to store is ${localFile.absolutePath}")
 
