@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "714789873735",
+    "firebase_url": "https://allatra-audio-library.firebaseio.com",
+    "project_id": "allatra-audio-library",
+    "storage_bucket": "allatra-audio-library.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:714789873735:android:657ebe1141228c0eaf2962",
+        "android_client_info": {
+          "package_name": "org.allatra.calendar"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "714789873735-0kss1kvj2jc4hi7m0d3fc9rno0gk3ruv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJ6Jeg6ZFNxvi41veKF8x2suJ40Zs_YpQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "714789873735-0kss1kvj2jc4hi7m0d3fc9rno0gk3ruv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:714789873735:android:5f20763f251cf57caf2962",
+        "android_client_info": {
+          "package_name": "ua.allatra.org.audio.library"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "714789873735-0kss1kvj2jc4hi7m0d3fc9rno0gk3ruv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJ6Jeg6ZFNxvi41veKF8x2suJ40Zs_YpQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "714789873735-0kss1kvj2jc4hi7m0d3fc9rno0gk3ruv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
