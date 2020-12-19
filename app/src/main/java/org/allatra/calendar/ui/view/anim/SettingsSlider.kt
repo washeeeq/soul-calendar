@@ -1,4 +1,4 @@
-package org.allatra.calendar.ui.anim
+package org.allatra.calendar.ui.view.anim
 
 import android.content.Context
 import android.graphics.*

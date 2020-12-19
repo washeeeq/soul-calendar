@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import org.allatra.calendar.common.EnumDefinition
+import org.allatra.calendar.common.Constants
 import org.joda.time.DateTime
 import timber.log.Timber
 import java.util.*
@@ -26,7 +26,7 @@ object UtilHelper {
     fun getApiUrl(languageId: Int, screenHeight: Int, screenWidth: Int): String {
         val date = DateTime.now()
         val screenResolution = "${screenHeight}x${screenWidth}"
-        return "${EnumDefinition.API_URL}${EnumDefinition.API_PARAM_SC}=${screenResolution}&${EnumDefinition.API_PARAM_LI}=$languageId&day=${date.dayOfMonth().get()}&month=${date.monthOfYear().get()}&year=${date.year}"
+        return "${Constants.API_URL}${Constants.API_PARAM_SC}=${screenResolution}&${Constants.API_PARAM_LI}=$languageId&day=${date.dayOfMonth().get()}&month=${date.monthOfYear().get()}&year=${date.year}"
     }
 
     /**

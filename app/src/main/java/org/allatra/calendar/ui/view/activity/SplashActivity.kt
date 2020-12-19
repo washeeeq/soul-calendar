@@ -1,4 +1,4 @@
-package org.allatra.calendar.ui.activity
+package org.allatra.calendar.ui.view.activity
 
 import android.annotation.SuppressLint
 import android.content.Intent

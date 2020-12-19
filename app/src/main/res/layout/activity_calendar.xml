@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorBgCalendar"
-    tools:context=".ui.activity.CalendarActivity">
+    tools:context=".ui.view.activity.CalendarActivity">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/motivatorOfDay"
@@ -52,7 +52,7 @@
             android:orientation="horizontal"
             app:layout_constraintGuide_percent="0.935" />
 
-        <org.allatra.calendar.ui.anim.SettingsSlider
+        <org.allatra.calendar.ui.view.anim.SettingsSlider
             android:id="@+id/sliderSettings"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

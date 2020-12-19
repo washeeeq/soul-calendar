@@ -58,10 +58,17 @@ dependencies {
     // Kotlin + coroutines
     implementation "androidx.work:work-runtime-ktx:2.4.0"
 
+    // Retrofit for api calls
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.9.1'
+    // androidx lifecycle
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.2.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
+
     implementation 'com.thelittlefireman:AppKillerManager:2.1.1'
     // Recommended: Add the Firebase SDK for Google Analytics.
     implementation 'com.google.firebase:firebase-analytics-ktx:17.5.0'
-
     // Add the Firebase Crashlytics SDK.
     implementation 'com.google.firebase:firebase-crashlytics-ktx:17.2.1'
 }

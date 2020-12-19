@@ -1,4 +1,4 @@
-package org.allatra.calendar.ui.activity
+package org.allatra.calendar.ui.view.activity
 
 import android.Manifest
 import android.animation.ObjectAnimator
@@ -10,7 +10,6 @@ import android.content.pm.PackageManager
 import android.graphics.Point
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -20,6 +19,8 @@ import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.observe
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
@@ -35,11 +36,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.allatra.calendar.BuildConfig
 import org.allatra.calendar.R
+import org.allatra.calendar.common.Constants
 import org.allatra.calendar.db.RealmHandlerObject
 import org.allatra.calendar.db.RealmHandlerObject.DEFAULT_ID
 import org.allatra.calendar.db.Settings
 import org.allatra.calendar.service.WakefulReceiver
 import org.allatra.calendar.service.WakefulReceiver.Companion.WAKE_RECEIVE_NOTIF
+import org.allatra.calendar.ui.factory.CalendarFactory
+import org.allatra.calendar.ui.viewmodel.CalendarViewModel
 import org.allatra.calendar.util.PictureLoaderHelper
 import org.allatra.calendar.util.UtilHelper
 import org.joda.time.LocalTime
@@ -55,8 +59,9 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private var itemElementHeight: Float = 0f
     private var settings: Settings? = null
     private lateinit var isUpdating: MutableLiveData<Boolean>
-    private var languageArrayAdapter: ArrayAdapter<CharSequence>? = null
+    private var languageArrayAdapter: ArrayAdapter<String>? = null
     private var wakefulReceiver: WakefulReceiver? = null
+    private lateinit var model: CalendarViewModel
 
     companion object {
         private const val MOTIVATOR_NAME = "motivator_of_the_day.jpeg"
@@ -118,7 +123,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             }
 
             val timePickerDialog = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { view, setHour, setMinute ->
-                if(setHour < 10){
+                if (setHour < 10) {
                     txtHours.text = "0${setHour.toString()}"
                 } else {
                     txtHours.text = setHour.toString()
@@ -169,7 +174,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                 intent.addFlags(FLAG_GRANT_WRITE_URI_PERMISSION)
                 startActivity(Intent.createChooser(intent, "I would like to share with you an interesting picture."))
 
-            }?: kotlin.run {
+            } ?: kotlin.run {
                 Timber.e("Drawable is null, no sharing can be done.")
                 showCustomMessage(getString(R.string.txt_error_no_picture_saved))
             }
@@ -222,13 +227,13 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         val notificationTimeString = "${txtHours.text}${txtDivider.text}${txtMinutes.text}"
         val notificationTime = LocalTime.parse(notificationTimeString)
 
-        if(settings == null){
+        if (settings == null) {
             Timber.tag("updateDbModel").e("This shall not happen. Settings are null.")
         } else {
             var isChanged = false
 
             settings?.let {
-                if(!it.language.equals(languageString)){
+                if(it.language != languageString){
                     isChanged = true
                 } else if(!it.allowNotifications.equals(allowNotifications)){
                     isChanged = true
@@ -238,14 +243,14 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     Timber.i("There was not change in settings, nothing to save.")
                 }
 
-                if(isChanged){
+                if (isChanged) {
                     it.language = languageString
                     it.allowNotifications = allowNotifications
                     it.notificationTime = notificationTime
 
                     RealmHandlerObject.updateDefaultSettings(it)
 
-                    if(allowNotifications) {
+                    if (allowNotifications) {
                         // remove previous
                         removeNotificationsSchedule()
                         // schedule new
@@ -261,13 +266,13 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         isUpdating.postValue(false)
     }
 
-    private fun registerBroadCastReceiverAndSchedule(){
+    private fun registerBroadCastReceiverAndSchedule() {
         wakefulReceiver = WakefulReceiver()
         registerReceiver(wakefulReceiver, IntentFilter(WAKE_RECEIVE_NOTIF))
 
         // schedule notifications
         settings?.let {
-            if(it.allowNotifications){
+            if (it.allowNotifications) {
                 // remove previous
                 removeNotificationsSchedule()
                 // schedule new
@@ -276,11 +281,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
     }
 
-    private fun removeNotificationsSchedule(){
+    private fun removeNotificationsSchedule() {
         wakefulReceiver?.cancelAlarm(applicationContext)
     }
 
-    private fun scheduleNotifications(){
+    private fun scheduleNotifications() {
         settings?.notificationTime?.let {
             wakefulReceiver?.setAlarm(applicationContext, it.hourOfDay, it.minuteOfHour)
             Timber.i("Notification was scheduled.")
@@ -290,12 +295,12 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     /**
      * Create DEFAULT db model if none.
      */
-    private fun createNewDbDefaultModel(){
+    private fun createNewDbDefaultModel() {
         settings = Settings(DEFAULT_ID, DB_DEFAULT_LANGUAGE, DB_DEFAULT_ALLOW_NOTIFICATIONS, LocalTime.parse(DB_DEFAULT_NOTIFICATION_TIME), null)
 
         settings?.let{
             RealmHandlerObject.createDefaultSettings(it)
-        }?: kotlin.run {
+        } ?: kotlin.run {
             Timber.e("App failed to create settings object.")
         }
     }
@@ -303,9 +308,9 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     /**
      * Hide or shows settings.
      */
-    private fun showOrHideSettings(){
+    private fun showOrHideSettings() {
         sliderSettings?.let {
-            if(it.getIsContracted()){
+            if (it.getIsContracted()) {
                 it.setIsContracted(false)
             } else {
                 it.setIsContracted(true)
@@ -329,8 +334,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             .duration = hideAnimationTimeNotifLayoutDuration
     }
 
-
-    private fun hideTimeNotificationLayout(){
+    private fun hideTimeNotificationLayout() {
         timeNotificationLayoutGroup.animate()
             .withEndAction {
                 Timber.i("Let us hide.")
@@ -345,7 +349,69 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             .duration = hideAnimationTimeNotifLayoutDuration
     }
 
-    private fun init(){
+    private fun init() {
+        val listOfLanguages = mutableListOf<String>()
+        // get model
+        model = ViewModelProvider(this, CalendarFactory(application)).get(CalendarViewModel::class.java)
+
+        model.listOfLanguages.observe(
+            this
+        ) { resource ->
+            when (resource.apiStatus) {
+                Constants.ApiStatus.SUCCESS -> {
+                    Timber.i("Received data from api.")
+                    Timber.i("${resource.data.toString()}")
+
+                    val indexLangCode = resource.data!!.data.columnsOrder.indexOf(Constants.LANG_CODE)
+
+                    if (indexLangCode != -1) {
+                        // create languagelist
+                        resource.data.data.table.forEach { recordArray ->
+                            val langCode = recordArray[indexLangCode]
+
+                            if (langCode is String) {
+                                listOfLanguages.add(langCode)
+                            } else {
+                                listOfLanguages.add(langCode.toString())
+                            }
+                        }
+
+                    } else {
+                        Timber.e("LanguageCode is null")
+                    }
+
+                }
+
+                Constants.ApiStatus.ERROR -> {
+                    resource.errorType?.let {
+                        when (it) {
+                            Constants.ErrorType.BACKEND_API -> {
+                                // showCustomMessage(resources.getString(R.string.error_backend_failure))
+                            }
+                            Constants.ErrorType.LOCAL_DB -> {
+                                // showCustomMessage(resources.getString(R.string.error_local_db_failure))
+                            }
+                            Constants.ErrorType.NETWORK -> {
+                                // showCustomMessage(resources.getString(R.string.error_network_failure))
+                            }
+                        }
+                    }
+                }
+
+                Constants.ApiStatus.LOADING -> {
+                }
+            }
+
+            // init languages
+            languageArrayAdapter = ArrayAdapter(
+                this, R.layout.custom_spinner_textview, listOfLanguages.toTypedArray()
+            )
+            languageArrayAdapter!!.setDropDownViewResource(R.layout.custom_spinner_dropdown_item)
+            spnLanguage.adapter = languageArrayAdapter
+            // TODO: load from DB
+            //spnLanguage.setSelection(0)
+        }
+
         moveYtoDefaultPosition = (getHeight().div(2)) * 0.8f
         itemElementHeight = (getHeight().div(2)) * 0.105f
 
@@ -355,37 +421,10 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             start()
         }
 
-        // init languages
-        languageArrayAdapter = ArrayAdapter.createFromResource(this, R.array.languages_image, R.layout.custom_spinner_textview)
-        (languageArrayAdapter as ArrayAdapter<CharSequence>).setDropDownViewResource(R.layout.custom_spinner_dropdown_item)
-        spnLanguage.adapter = languageArrayAdapter
-        spnLanguage.setSelection(0)
-        spnLanguage.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // nothing here
-            }
-
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                val stringValue = parent?.getItemAtPosition(position) as String
-                val stringCancelValue = languageArrayAdapter?.getItem(1).toString()
-
-                if(stringValue.equals(stringCancelValue)){
-                    Timber.i("User cancelled, back to RU.")
-                    spnLanguage.setSelection(0, false)
-                }
-            }
-
-        }
-
-        RealmHandlerObject.initWithContext(this)
+        //RealmHandlerObject.initWithContext(this)
         settings = RealmHandlerObject.getDefaultSettings()
 
-        if(settings == null){
+        if (settings == null) {
             Timber.i("Settings are not created yet. Default will be added")
             createNewDbDefaultModel()
         }
@@ -396,7 +435,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             // set language
             val positionToSelect = languageArrayAdapter?.getPosition(it.language)
             positionToSelect?.let { position ->
-                if(positionToSelect != -1) {
+                if (positionToSelect != -1) {
                     spnLanguage.setSelection(position)
                 } else {
                     Timber.e("Position is -1, text not found.")
@@ -406,20 +445,20 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             // set is checked
             switchShowNotif.isChecked = it.allowNotifications
 
-            if(!it.allowNotifications){
+            if (!it.allowNotifications) {
                 hideTimeNotificationLayout()
             } else {
                 showTimeNotificationLayout()
             }
 
             // set time / hour and minute
-            txtHours.text = if(it.notificationTime.hourOfDay < 10){
+            txtHours.text = if (it.notificationTime.hourOfDay < 10) {
                 "0${it.notificationTime.hourOfDay}"
-            } else {it.notificationTime.hourOfDay.toString()}
+            } else { it.notificationTime.hourOfDay.toString() }
 
-            txtMinutes.text = if(it.notificationTime.minuteOfHour < 10){
+            txtMinutes.text = if(it.notificationTime.minuteOfHour < 10) {
                 "0${it.notificationTime.minuteOfHour}"
-            } else {it.notificationTime.minuteOfHour.toString()}
+            } else { it.notificationTime.minuteOfHour.toString() }
         } ?: kotlin.run {
             Timber.e("Settings were not initialized, this shall not happen.")
         }
@@ -427,7 +466,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         isUpdating = MutableLiveData()
 
         isUpdating.observe(this, Observer { updatingDb ->
-            if(updatingDb){
+            if (updatingDb) {
                 loader.show()
             } else {
                 loader.hide()
@@ -444,7 +483,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         Timber.i("Method = getDailyPictureAndSet")
         settings?.let {
             it.lastDownloadAt?.let { lastDate ->
-                if(UtilHelper.shouldLoadFromApiNew(lastDate)){
+                if (UtilHelper.shouldLoadFromApiNew(lastDate)) {
                     Timber.i("Shall load new picture.")
                     deletePreviousPicture()
                     downloadNewAndUpdateDb()
@@ -452,10 +491,10 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     Timber.i("Picture already exists on storage, will load.")
                     loadPictureFromStorage(getLocalMotivatorFile().absolutePath)
                 }
-            }?: kotlin.run {
+            } ?: kotlin.run {
                 downloadNewAndUpdateDb()
             }
-        }?: kotlin.run {
+        } ?: kotlin.run {
             Timber.e("Settings are null, this shall not happen.")
         }
     }
