@@ -57,6 +57,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private val hideAnimationTimeNotifLayoutDuration = 500L
     private val hideAnimationDurationSec = 100L
     private var itemElementHeight: Float = 0f
+    private val hidePercentage = 0.43f
     private var settings: Settings? = null
     private lateinit var isUpdating: MutableLiveData<Boolean>
     private var languageArrayAdapter: ArrayAdapter<String>? = null
@@ -412,7 +413,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             //spnLanguage.setSelection(0)
         }
 
-        moveYtoDefaultPosition = (getHeight().div(2)) * 0.8f
+        moveYtoDefaultPosition = getHeight() * hidePercentage
         itemElementHeight = (getHeight().div(2)) * 0.105f
 
         // hide it
