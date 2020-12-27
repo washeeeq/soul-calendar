@@ -19,6 +19,11 @@ object Constants {
     const val LANG_CODE = "two_chars_code"
     const val LANG_NAME = "translated_name"
 
+    // db
+    const val DEFAULT_USER_SETTINGS_ID = 1
+    const val DEFAULT_MOTIVATOR_ID = 1
+    const val DB_NAME = "soul_calendar_db"
+
     enum class EnStatus {
         IDLE, DOWNLOADING, READY, FAILED
     }

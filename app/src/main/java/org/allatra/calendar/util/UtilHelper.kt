@@ -59,27 +59,16 @@ object UtilHelper {
     /**
      * Check downloadedAt timestamp against new.
      */
-    fun shouldLoadFromApiNew(downloadedAt: Date): Boolean {
-        val currentTime = Date()
-        val calendarCurrentTime = dateToCalendar(currentTime)
+    fun shouldLoadFromApiNew(downloadedAt: DateTime): Boolean {
+        val dateTimeNow = DateTime()
 
-        val calendarDownloadedAt = dateToCalendar(downloadedAt)
+        val dayDownloaded = downloadedAt.dayOfYear
+        val dayOfNow = dateTimeNow.dayOfYear
 
-        val dayDownloaded = calendarDownloadedAt.get(Calendar.DAY_OF_MONTH)
-        val dayOfNow = calendarCurrentTime.get(Calendar.DAY_OF_MONTH)
-
-        return if(calendarDownloadedAt.get(Calendar.MONTH) == calendarCurrentTime.get(Calendar.MONTH)
-            && calendarDownloadedAt.get(Calendar.YEAR) == calendarCurrentTime.get(Calendar.YEAR) ){
+        return if(dayDownloaded == dayOfNow && downloadedAt.year == dateTimeNow.year) {
             dayOfNow > dayDownloaded
         } else {
             true
         }
-    }
-
-    //Convert Date to Calendar
-    private fun dateToCalendar(date: Date): Calendar {
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        return calendar
     }
 }
