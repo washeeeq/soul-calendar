@@ -31,14 +31,14 @@ class CalendarViewModel(
     private val repository = CalendarRepository(AppDatabase.getDatabase(application).userSettingsDao(), AppDatabase.getDatabase(application).motivatorDao())
     // get api languages
     private val _listOfLanguages = MutableLiveData<Resource<LanguageResource>>()
-    private val _userSettings = MutableLiveData<Resource<UserSettings>>()
+    private val _userSettingsResource = MutableLiveData<Resource<UserSettings>>()
     private val _motivatorResource = MutableLiveData<Resource<Motivator>>()
     // getter
     val listOfLanguages: MutableLiveData<Resource<LanguageResource>>
         get() = _listOfLanguages
 
-    val userSettings: MutableLiveData<Resource<UserSettings>>
-        get() = _userSettings
+    val userSettingsResource: MutableLiveData<Resource<UserSettings>>
+        get() = _userSettingsResource
 
     val motivatorResource: MutableLiveData<Resource<Motivator>>
         get() = _motivatorResource
@@ -50,32 +50,32 @@ class CalendarViewModel(
         getMotivator()
     }
 
-    fun updateMotivator(lastDownloadedAt: DateTime) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _motivatorResource.value?.data?.let {
-                Timber.i("Motivator object exist. Let us update")
-                it.lastDownloadAt = lastDownloadedAt
-                repository.updateMotivator(it)
-            } ?: kotlin.run {
-                Timber.i("Motivator object does not exist, is new.")
-                val motivator = Motivator(DEFAULT_MOTIVATOR_ID, lastDownloadedAt)
-                repository.insertMotivator(motivator)
-            }
-        }
-    }
-
     private fun getMotivator() {
+        // loading
+        _motivatorResource.postValue(Resource.loading(null))
+        Timber.i("We will fetch motivator.")
+
         viewModelScope.launch(Dispatchers.IO) {
             repository.getMotivator().collect {
                 // cancel the context, we need to fetch only once
                 coroutineContext.cancel()
-                Timber.i("We have fetched motivator = $it.")
+                Timber.i("We have fetched motivatorobject = $it.")
+                _motivatorResource.postValue(Resource.success(it))
+            }
+        }
+    }
 
-                if (it != null) {
-                    _motivatorResource.postValue(Resource.success(it))
-                } else {
-                    Timber.i("Motivator is null")
-                }
+    private fun getUserSettings() {
+        // loading
+        _userSettingsResource.postValue(Resource.loading(null))
+        Timber.i("We will fetch user settings.")
+        // launch coroutine
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.getUserSettings().collect {
+                // cancel the context, we need to fetch only once
+                coroutineContext.cancel()
+                Timber.i("We have fetched userSettings = $it.")
+                _userSettingsResource.postValue(Resource.success(it))
             }
         }
     }
@@ -87,7 +87,7 @@ class CalendarViewModel(
         if (isToUpdate) {
             var valuesChanged = false
 
-            _userSettings.value?.data?.let {
+            _userSettingsResource.value?.data?.let {
                 when {
                     it.apiLanguageId != apiLanguageId -> {
                         valuesChanged = true
@@ -112,7 +112,7 @@ class CalendarViewModel(
                         repository.updateUserSettings(it)
                         Timber.i("Values has been updated, userSettings = $it")
                         // post it
-                        _userSettings.postValue(Resource.success(it))
+                        _userSettingsResource.postValue(Resource.success(it))
                     }
                 }
             } ?: kotlin.run {
@@ -125,25 +125,27 @@ class CalendarViewModel(
                 repository.insertUserSettings(userSettings)
                 Timber.i("New values has been stored userSettings = $userSettings")
                 // post it
-                _userSettings.postValue(Resource.success(userSettings))
+                _userSettingsResource.postValue(Resource.success(userSettings))
             }
         }
     }
 
-    private fun getUserSettings() {
-        Timber.i("We will fetch user settings.")
-        // launch coroutine
+    fun updateMotivator(lastDownloadedAt: DateTime) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.getUserSettings().collect {
-                // cancel the context, we need to fetch only once
-                coroutineContext.cancel()
-                Timber.i("We have fetched userSettings = $it.")
-                _userSettings.postValue(Resource.success(it))
+            _motivatorResource.value?.data?.let {
+                Timber.i("Motivator object exist. Let us update")
+                it.lastDownloadAt = lastDownloadedAt
+                repository.updateMotivator(it)
+            } ?: kotlin.run {
+                Timber.i("Motivator object does not exist, is new.")
+                val motivator = Motivator(DEFAULT_MOTIVATOR_ID, lastDownloadedAt)
+                repository.insertMotivator(motivator)
             }
         }
     }
 
     private fun fetchLanguagesFromApi() {
+        _listOfLanguages.postValue(Resource.loading(null))
         val request = repository.getLanguagesFromApi()
         request.enqueue(object: Callback<LanguageResource> {
             override fun onResponse(

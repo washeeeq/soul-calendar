@@ -30,13 +30,13 @@ import com.thelittlefireman.appkillermanager.ui.DialogKillerManagerBuilder
 import kotlinx.android.synthetic.main.activity_calendar.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.allatra.calendar.BuildConfig
 import org.allatra.calendar.R
 import org.allatra.calendar.common.Constants
 import org.allatra.calendar.common.Constants.DEFAULT_LOCALE
 import org.allatra.calendar.data.api.model.Resource
 import org.allatra.calendar.data.api.resource.LanguageResource
+import org.allatra.calendar.db.entity.Motivator
 import org.allatra.calendar.db.entity.UserSettings
 import org.allatra.calendar.service.WakefulReceiver
 import org.allatra.calendar.service.WakefulReceiver.Companion.WAKE_RECEIVE_NOTIF
@@ -56,8 +56,8 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private val hideAnimationTimeNotifLayoutDuration = 500L
     private val hideAnimationDurationSec = 100L
     private var itemElementHeight: Float = 0f
-    private val hidePercentage = 0.43f
-    private lateinit var isUpdating: MutableLiveData<Boolean>
+    private val hidePercentage = 0.41f
+    private lateinit var isLoading: MutableLiveData<Boolean>
     private var languageArrayAdapter: ArrayAdapter<String>? = null
     private var wakefulReceiver: WakefulReceiver? = null
     private lateinit var model: CalendarViewModel
@@ -113,7 +113,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             var hourOfDay = 10
             var minute = 10
 
-            model.userSettings.value?.let { value ->
+            model.userSettingsResource.value?.let { value ->
                 value.data?.notificationTime?.let {
                     hourOfDay = it.hourOfDay
                     minute = it.minuteOfHour
@@ -148,7 +148,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
          * Save all changed settings to DB.
          */
         btnSave.setOnClickListener {
-            isUpdating.postValue(true)
+            isLoading.postValue(true)
             updateDbAndSchedule()
 
             showOrHideSettings()
@@ -196,17 +196,6 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
     }
 
-    /**
-     * When app is resumed, get new daily picture and set.
-     */
-    override fun onResume() {
-        Timber.tag("onResume").i("Status -> Resumed.")
-        super.onResume()
-
-        // we load picture only here
-        //getDailyPictureAndSet()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         // deregister on quit
@@ -225,7 +214,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         val notificationTime = LocalTime.parse(notificationTimeString)
 
         apiLanguageId?.let { apiCurrentLanguageId ->
-            model.userSettings.value?.data?.let {
+            model.userSettingsResource.value?.data?.let {
                 Timber.i("User settings exist already! Let us update them.")
                 model.createOrUpdateUserSettings(true, apiCurrentLanguageId, sendNotifications, notificationTime)
             } ?: run {
@@ -244,7 +233,20 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
 
         Thread.sleep(500)
-        isUpdating.postValue(false)
+        isLoading.postValue(false)
+    }
+
+    private fun getCurrentApiLanguageId(mapOfLanguages: Map<Int, String>, languageCode: String): String? {
+        var apiLangId: String? = null
+
+        mapOfLanguages.forEach lang_loop@{
+            if (languageCode == it.value) {
+                apiLangId = it.key.toString()
+                Timber.i("Language code found langId = ${it.value}, langCode = ${it.key}")
+                return@lang_loop
+            }
+        }
+        return apiLangId
     }
 
     private fun getCurrentApiLanguageId(languageCode: String): String? {
@@ -358,18 +360,18 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     }
 
     private fun init() {
-        val listOfLanguages = mutableListOf<String>()
-        val mapOfLanguages = mutableMapOf<Int, String>()
         // get model
         model = ViewModelProvider(this, CalendarFactory(application)).get(CalendarViewModel::class.java)
 
         /**
          * Observe only once.
          */
-        model.listOfLanguages.observeOnce(this,
+        model.listOfLanguages.observe(this,
             Observer<Resource<LanguageResource>> { resource ->
                 when (resource.apiStatus) {
                     Constants.ApiStatus.SUCCESS -> {
+                        isLoading.postValue(false)
+                        val listOfLanguages = mutableListOf<String>()
                         Timber.i("Received data from api.")
 
                         resource.data?.let {
@@ -386,106 +388,55 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
                                     if (langCode is String) {
                                         listOfLanguages.add(langCode)
-                                        when (langId) {
-                                            is Double -> {
-                                                mapOfLanguages[langId.toInt()] = langCode
-                                            }
-                                            is Int -> {
-                                                mapOfLanguages[langId] = langCode
-                                            }
-                                            is Float -> {
-                                                mapOfLanguages[langId.toInt()] = langCode
-                                            }
-
-                                            else -> {
-                                                Timber.e("Unknown format of LangId = ${langId.javaClass}")
-                                            }
-                                        }
                                     } else {
                                         listOfLanguages.add(langCode.toString())
-                                        when (langId) {
-                                            is Double -> {
-                                                mapOfLanguages[langId.toInt()] = langCode.toString()
-                                            }
-                                            is Int -> {
-                                                mapOfLanguages[langId] = langCode.toString()
-                                            }
-                                            is Float -> {
-                                                mapOfLanguages[langId.toInt()] = langCode.toString()
-                                            }
-
-                                            else -> {
-                                                Timber.e("Unknown format of LangId = ${langId.javaClass}")
-                                            }
-                                        }
                                     }
                                 }
 
+                                Timber.i("Data fetched..")
+
+                                // init languages
+                                languageArrayAdapter = ArrayAdapter(
+                                    this, R.layout.custom_spinner_textview, listOfLanguages.toTypedArray()
+                                )
+                                languageArrayAdapter!!.setDropDownViewResource(R.layout.custom_spinner_dropdown_item)
+                                spnLanguage.adapter = languageArrayAdapter
+
+                                if (model.userSettingsResource.value != null && model.userSettingsResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
+                                    && model.motivatorResource.value != null && model.motivatorResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
+                                    && resource.apiStatus == Constants.ApiStatus.SUCCESS) {
+                                    Timber.i("All done by languageResource!")
+                                    setLanguageAndDailyPicture()
+                                } else {
+                                    Timber.e("model.listOfLanguages.value ${model.motivatorResource.value?.apiStatus}, model.motivatorResource.value = ${model.userSettingsResource.value?.apiStatus}, resource.apiStatus = ${resource.apiStatus}")
+                                }
                             } else {
                                 Timber.e("LanguageCode is null")
                             }
+                        } ?: run {
+                            Timber.e("There are no data returned.. for languages.")
                         }
                     }
 
                     Constants.ApiStatus.ERROR -> {
+                        isLoading.postValue(false)
                         resource.errorType?.let {
                             when (it) {
                                 Constants.ErrorType.BACKEND_API -> {
-                                    // showCustomMessage(resources.getString(R.string.error_backend_failure))
+                                    showCustomMessage(resources.getString(R.string.error_backend_failure))
                                 }
                                 Constants.ErrorType.LOCAL_DB -> {
-                                    // showCustomMessage(resources.getString(R.string.error_local_db_failure))
+                                    showCustomMessage(resources.getString(R.string.error_local_db_failure))
                                 }
                                 Constants.ErrorType.NETWORK -> {
-                                    // showCustomMessage(resources.getString(R.string.error_network_failure))
+                                    showCustomMessage(resources.getString(R.string.error_network_failure))
                                 }
                             }
                         }
                     }
 
                     Constants.ApiStatus.LOADING -> {
-                    }
-                }
-
-                // init languages
-                languageArrayAdapter = ArrayAdapter(
-                    this, R.layout.custom_spinner_textview, listOfLanguages.toTypedArray()
-                )
-                languageArrayAdapter!!.setDropDownViewResource(R.layout.custom_spinner_dropdown_item)
-                spnLanguage.adapter = languageArrayAdapter
-
-                var apiLanguageId: String? = null
-                model.userSettings.value?.let { resourceUserSettings ->
-                    resourceUserSettings.data?.let { userSettings ->
-                        apiLanguageId = userSettings.apiLanguageId
-                        val languageToSetString = mapOfLanguages[apiLanguageId!!.toInt()]
-
-                        languageToSetString?.let {
-                            Timber.i("Language from the map is $languageToSetString")
-                            setLanguageFromUserSettings(it)
-                        }?: kotlin.run {
-                            Timber.e("Could not find langId = ${apiLanguageId!!} in map ${mapOfLanguages.toString()}")
-                        }
-                    } ?: kotlin.run {
-                        setDefaultLanguage()
-                    }
-
-                    // hide layout
-                    hideTimeNotificationLayout()
-                }
-
-                apiLanguageId?.let {
-                    // set picture with
-                    Timber.i("Api language id from userSettings, id = $it")
-                    getDailyPictureAndSet(it.toInt())
-                } ?: run {
-                    val apiIdByDefault = getCurrentApiLanguageId(getDefaultLanguageCode())
-                    Timber.i("apiIdByDefault = $apiIdByDefault")
-
-                    apiIdByDefault?.let {
-                        getDailyPictureAndSet(it.toInt())
-                    } ?: kotlin.run {
-                        Timber.e("ApiByDefault cannot be fetched.")
+                        isLoading.postValue(true)
                     }
                 }
             })
@@ -493,7 +444,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         /**
          * Let us observe on user settings, once.
          */
-        model.userSettings.observeOnce(this, Observer<Resource<UserSettings>> {resource ->
+        model.userSettingsResource.observe(this, Observer<Resource<UserSettings>> { resource ->
             when (resource.apiStatus) {
                 Constants.ApiStatus.SUCCESS -> {
                     Timber.i("Received userSettings from api.")
@@ -536,13 +487,13 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     resource.errorType?.let {
                         when (it) {
                             Constants.ErrorType.BACKEND_API -> {
-                                // showCustomMessage(resources.getString(R.string.error_backend_failure))
+                                showCustomMessage(resources.getString(R.string.error_backend_failure))
                             }
                             Constants.ErrorType.LOCAL_DB -> {
-                                // showCustomMessage(resources.getString(R.string.error_local_db_failure))
+                                showCustomMessage(resources.getString(R.string.error_local_db_failure))
                             }
                             Constants.ErrorType.NETWORK -> {
-                                // showCustomMessage(resources.getString(R.string.error_network_failure))
+                                showCustomMessage(resources.getString(R.string.error_network_failure))
                             }
                         }
                     }
@@ -552,6 +503,25 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                 }
             }
 
+            if (model.listOfLanguages.value != null && model.listOfLanguages.value!!.apiStatus == Constants.ApiStatus.SUCCESS
+                && model.motivatorResource.value != null && model.motivatorResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
+                && resource.apiStatus == Constants.ApiStatus.SUCCESS) {
+                Timber.i("All done by loading userSettings resource!")
+                setLanguageAndDailyPicture()
+            } else {
+                Timber.e("model.listOfLanguages.value ${model.listOfLanguages.value?.apiStatus}, model.motivatorResource.value = ${model.motivatorResource.value?.apiStatus}, resource.apiStatus = ${resource.apiStatus}")
+            }
+        })
+
+        model.motivatorResource.observe(this, Observer<Resource<Motivator>>{
+            if (model.listOfLanguages.value != null && model.listOfLanguages.value!!.apiStatus == Constants.ApiStatus.SUCCESS
+                && model.userSettingsResource.value != null && model.userSettingsResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
+                && it.apiStatus == Constants.ApiStatus.SUCCESS) {
+                Timber.i("All done by loading motivatorResource!")
+                setLanguageAndDailyPicture()
+            } else {
+                Timber.e("model.listOfLanguages.value ${model.listOfLanguages.value?.apiStatus}, model.motivatorResource.value = ${model.userSettingsResource.value?.apiStatus}, resource.apiStatus = ${it.apiStatus}")
+            }
         })
 
         moveYtoDefaultPosition = getHeight() * hidePercentage
@@ -563,15 +533,102 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             start()
         }
 
-        isUpdating = MutableLiveData()
+        isLoading = MutableLiveData()
 
-        isUpdating.observe(this, Observer { updatingDb ->
+        isLoading.observe(this, Observer { updatingDb ->
             if (updatingDb) {
                 loader.show()
             } else {
                 loader.hide()
             }
         })
+    }
+
+    private fun setLanguageAndDailyPicture() {
+        Timber.i("setLanguageAndDailyPicture")
+        var apiLanguageId: String? = null
+        val mapOfLanguages = mutableMapOf<Int, String>()
+
+        model.listOfLanguages.value?.data?.let {
+            val indexLangCode = it.data.columnsOrder.indexOf(Constants.LANG_CODE)
+            val indexLangId = it.data.columnsOrder.indexOf(Constants.LANG_ID)
+
+            if (indexLangCode != -1) {
+                // create languagelist
+                it.data.table.forEach { recordArray ->
+                    val langId = recordArray[indexLangId]
+                    val langCode = recordArray[indexLangCode]
+
+                    if (langCode is String) {
+                        when (langId) {
+                            is Double -> {
+                                mapOfLanguages[langId.toInt()] = langCode
+                            }
+                            is Int -> {
+                                mapOfLanguages[langId] = langCode
+                            }
+                            is Float -> {
+                                mapOfLanguages[langId.toInt()] = langCode
+                            }
+
+                            else -> {
+                                Timber.e("Unknown format of LangId = ${langId.javaClass}")
+                            }
+                        }
+                    } else {
+                        when (langId) {
+                            is Double -> {
+                                mapOfLanguages[langId.toInt()] = langCode.toString()
+                            }
+                            is Int -> {
+                                mapOfLanguages[langId] = langCode.toString()
+                            }
+                            is Float -> {
+                                mapOfLanguages[langId.toInt()] = langCode.toString()
+                            }
+
+                            else -> {
+                                Timber.e("Unknown format of LangId = ${langId.javaClass}")
+                            }
+                        }
+                    }
+                }
+
+                Timber.i("Data fetched..")
+            }
+            Timber.d("Num of languages: ${mapOfLanguages.size}")
+        }
+
+        model.userSettingsResource.value?.let { resourceUserSettings ->
+            resourceUserSettings.data?.let { userSettings ->
+                apiLanguageId = userSettings.apiLanguageId
+                val languageToSetString = mapOfLanguages[apiLanguageId!!.toInt()]
+
+                languageToSetString?.let { language ->
+                    Timber.i("Language from the map is $languageToSetString")
+                    setLanguageFromUserSettings(language)
+                }?: kotlin.run {
+                    Timber.e("Could not find langId = ${apiLanguageId!!} in map ${mapOfLanguages.toString()}")
+                }
+            } ?: kotlin.run {
+                setDefaultLanguage()
+            }
+        }
+
+        apiLanguageId?.let { apiLangId ->
+            // set picture with
+            Timber.i("Api language id from userSettings, id = $apiLangId")
+            getDailyPictureAndSet(apiLangId.toInt())
+        } ?: run {
+            val apiIdByDefault = getCurrentApiLanguageId(mapOfLanguages, getDefaultLanguageCode())
+            Timber.i("apiIdByDefault = $apiIdByDefault")
+
+            apiIdByDefault?.let { apiLangIdByDefault ->
+                getDailyPictureAndSet(apiLangIdByDefault.toInt())
+            } ?: kotlin.run {
+                Timber.e("ApiByDefault cannot be fetched.")
+            }
+        }
     }
 
     private fun setLanguageFromUserSettings(language: String) {
@@ -702,12 +759,12 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
      * Get picture from URL and store into file (prepare for sharing) and load it into placeholder of image.
      */
     private fun loadPictureAndStore(url: String) {
-        if (UtilHelper.isConnected(this)) {
+        if (UtilHelper.isNetworkAvailable(this)) {
             motivatorOfDay?.let {
                 Glide
                     .with(this)
                     .load(url)
-                    .centerInside()
+                    .centerCrop()
                     .listener(object : RequestListener<Drawable> {
                         override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean): Boolean {
                             Timber.e("Resource failed to load.")

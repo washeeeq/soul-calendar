@@ -34,8 +34,6 @@ object ApiClient {
         // Set timeouts
         builder.connectTimeout(CONNECT_TIMEOUT_SEC, TimeUnit.SECONDS)
         builder.readTimeout(CONNECT_READ_TIMEOUT, TimeUnit.SECONDS)
-        // Add repeat
-        builder.addInterceptor(ErrorInterceptor())
 
         return builder.build()
     }

@@ -5,14 +5,11 @@ object Constants {
     const val BASE_URL = "https://calendar.allatra.info/"
     const val API_PARAM_SC = "screen_resolution"
     const val API_PARAM_LI = "language_id"
-    const val API_PARA_DAY = "day"
-    const val API_PARAM_MONTH = "month"
-    const val API_PARAM_YEAR = "year"
     const val CONNECT_TIMEOUT_SEC = 60L
     const val CONNECT_READ_TIMEOUT = 10L
     const val DEFAULT_LOCALE = "ru"
     const val API_REPEAT_UNSUCCESSFUL = 3
-    const val API_WAIT_THRESHOLD = 5000L
+    const val API_WAIT_THRESHOLD = 2000L
 
     // api get lang
     const val LANG_ID = "id"

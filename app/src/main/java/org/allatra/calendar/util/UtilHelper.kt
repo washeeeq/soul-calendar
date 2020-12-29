@@ -29,30 +29,28 @@ object UtilHelper {
         return "${Constants.API_URL}${Constants.API_PARAM_SC}=${screenResolution}&${Constants.API_PARAM_LI}=$languageId&day=${date.dayOfMonth().get()}&month=${date.monthOfYear().get()}&year=${date.year}"
     }
 
+
     /**
      * Returns false when network is not connected.
      * Returns true when network is active.
      */
-    fun isConnected(context: Context): Boolean {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
-
-        cm?.let { connectivityM ->
-            if (Build.VERSION.SDK_INT < 23) {
-                return connectivityM.activeNetworkInfo != null && connectivityM.activeNetworkInfo.isConnected
-            } else {
-                val nc = connectivityM.getNetworkCapabilities(connectivityM.activeNetwork)
-
-                nc?.let {
-                    return it.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || it.hasTransport(
-                        NetworkCapabilities.TRANSPORT_WIFI)
-                }?: kotlin.run {
-                    Timber.e("System service Network capibilities returns null.")
-                    return false
-                }
+    fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val nw = connectivityManager.activeNetwork ?: return false
+            val actNw = connectivityManager.getNetworkCapabilities(nw) ?: return false
+            return when {
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                // for other device how are able to connect with Ethernet
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+                // for check internet over Bluetooth
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> true
+                else -> false
             }
-        }?: kotlin.run {
-            Timber.e("System service CONNECTIVITY_SERVICE returns null.")
-            return false
+        } else {
+            val nwInfo = connectivityManager.activeNetworkInfo ?: return false
+            return nwInfo.isConnected
         }
     }
 
