@@ -10,7 +10,7 @@ interface MotivatorDao {
     @Query("SELECT * FROM Motivator WHERE uid = $DEFAULT_MOTIVATOR_ID")
     fun getMotivator(): Flow<Motivator>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(motivator: Motivator)
 
     @Update

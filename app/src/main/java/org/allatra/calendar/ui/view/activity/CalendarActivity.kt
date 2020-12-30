@@ -2,6 +2,7 @@ package org.allatra.calendar.ui.view.activity
 
 import android.Manifest
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -13,10 +14,13 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import com.bumptech.glide.Glide
@@ -69,14 +73,33 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         private const val ROOT_MOTIVATORS_DIR = "images"
         private const val FILE_PROVIDER = ".fileprovider"
         private const val HTTP_CONST = "http"
+
+        private const val AUTO_TEST_MIN_SIZE_SP = 9
+        private const val AUTO_TEST_AVG_SIZE_SP = 11
+        private const val AUTO_TEXT_MAX_SIZE_SP = 14
+        private const val AUTO_TEXT_STEP_GRANULARITY_SP = 1
     }
 
+    @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_calendar)
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+        }
+
+        // set type uniform, using above 26 version
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            txtSelectLanguage?.setAutoSizeTextTypeUniformWithConfiguration(AUTO_TEST_MIN_SIZE_SP,AUTO_TEXT_MAX_SIZE_SP,AUTO_TEXT_STEP_GRANULARITY_SP,AppCompatTextView.AUTO_SIZE_TEXT_TYPE_UNIFORM)
+            txtAllowNotifications?.setAutoSizeTextTypeUniformWithConfiguration(AUTO_TEST_MIN_SIZE_SP,AUTO_TEXT_MAX_SIZE_SP,AUTO_TEXT_STEP_GRANULARITY_SP,AppCompatTextView.AUTO_SIZE_TEXT_TYPE_UNIFORM)
+            txtTimeOfNotification?.setAutoSizeTextTypeUniformWithConfiguration(AUTO_TEST_MIN_SIZE_SP,AUTO_TEXT_MAX_SIZE_SP,AUTO_TEXT_STEP_GRANULARITY_SP,AppCompatTextView.AUTO_SIZE_TEXT_TYPE_UNIFORM)
+            txtShare?.setAutoSizeTextTypeUniformWithConfiguration(AUTO_TEST_MIN_SIZE_SP,AUTO_TEXT_MAX_SIZE_SP,AUTO_TEXT_STEP_GRANULARITY_SP,AppCompatTextView.AUTO_SIZE_TEXT_TYPE_UNIFORM)
+        } else {
+            txtSelectLanguage?.textSize = AUTO_TEST_AVG_SIZE_SP.toFloat()
+            txtAllowNotifications?.textSize = AUTO_TEST_AVG_SIZE_SP.toFloat()
+            txtTimeOfNotification?.textSize = AUTO_TEST_AVG_SIZE_SP.toFloat()
+            txtShare?.textSize = AUTO_TEST_AVG_SIZE_SP.toFloat()
         }
 
         init()

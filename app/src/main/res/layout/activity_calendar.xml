@@ -149,8 +149,9 @@
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/txtSelectLanguage"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="0dp"
+                app:layout_constraintWidth_percent="0.72"
                 app:layout_constraintHeight_percent="0.7"
                 android:gravity="center_vertical"
                 android:text="@string/txt_select_language"
@@ -167,6 +168,7 @@
                 app:layout_constraintGuide_percent="0.97" />
 
             <FrameLayout
+                android:id="@+id/groupSpinner"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 app:layout_constraintHeight_percent="0.8"
@@ -239,9 +241,10 @@
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/txtAllowNotifications"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="0dp"
                 app:layout_constraintHeight_percent="0.7"
+                app:layout_constraintWidth_percent="0.68"
                 android:gravity="center_vertical"
                 android:text="@string/txt_allow_notifications"
                 app:layout_constraintStart_toStartOf="@id/verGuideLine12"
@@ -313,8 +316,9 @@
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/txtTimeOfNotification"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="0dp"
+                app:layout_constraintWidth_percent="0.63"
                 app:layout_constraintHeight_percent="0.7"
                 android:gravity="center_vertical"
                 android:text="@string/txt_time_of_notification"
