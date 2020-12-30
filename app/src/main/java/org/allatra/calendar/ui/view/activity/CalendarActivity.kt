@@ -48,6 +48,7 @@ import org.joda.time.DateTime
 import org.joda.time.LocalTime
 import timber.log.Timber
 import java.io.File
+import java.lang.Exception
 import java.util.*
 
 class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(Dispatchers.Default), ActivityCompat.OnRequestPermissionsResultCallback {
@@ -63,8 +64,9 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private lateinit var model: CalendarViewModel
 
     companion object {
-        private const val MOTIVATOR_NAME = "motivator_of_the_day.jpeg"
+        private const val MOTIVATOR_NAME = "motivator.jpeg"
         private const val CONTENT_TYPE_IMAGE = "image/jpeg"
+        private const val ROOT_MOTIVATORS_DIR = "images"
         private const val FILE_PROVIDER = ".fileprovider"
         private const val HTTP_CONST = "http"
     }
@@ -120,20 +122,26 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                 }
             }
 
-            val timePickerDialog = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { view, setHour, setMinute ->
-                if (setHour < 10) {
-                    txtHours.text = "0${setHour.toString()}"
-                } else {
-                    txtHours.text = setHour.toString()
-                }
+            val timePickerDialog = TimePickerDialog(
+                this,
+                TimePickerDialog.OnTimeSetListener { view, setHour, setMinute ->
+                    if (setHour < 10) {
+                        txtHours.text = "0${setHour.toString()}"
+                    } else {
+                        txtHours.text = setHour.toString()
+                    }
 
-                if(setMinute < 10){
-                    txtMinutes.text = "0${setMinute.toString()}"
-                } else {
-                    txtMinutes.text = setMinute.toString()
-                }
+                    if (setMinute < 10) {
+                        txtMinutes.text = "0${setMinute.toString()}"
+                    } else {
+                        txtMinutes.text = setMinute.toString()
+                    }
 
-            }, hourOfDay, minute, true)
+                },
+                hourOfDay,
+                minute,
+                true
+            )
             timePickerDialog.show()
         }
 
@@ -159,17 +167,27 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
          */
         shareLayoutGroup.setOnClickListener {
             motivatorOfDay.drawable?.let {
-                val localFile = getLocalMotivatorFile()
-                Timber.i("Path to load is ${localFile.absolutePath}")
+                model.motivatorResource.value?.data?.let {
+                    val localFile = getLocalMotivatorFile(it.lastDownloadAt)
+                    Timber.i("Path to load is ${localFile.absolutePath}")
 
-                val shareUri = FileProvider.getUriForFile(applicationContext, applicationContext.packageName.toString() + FILE_PROVIDER, localFile)
+                    val shareUri = FileProvider.getUriForFile(
+                        applicationContext,
+                        applicationContext.packageName.toString() + FILE_PROVIDER,
+                        localFile
+                    )
 
-                val intent = Intent(Intent.ACTION_SEND)
-                intent.type = CONTENT_TYPE_IMAGE
-                intent.putExtra(Intent.EXTRA_STREAM, shareUri)
-                intent.addFlags(FLAG_GRANT_WRITE_URI_PERMISSION)
-                startActivity(Intent.createChooser(intent, "I would like to share with you an interesting picture."))
-
+                    val intent = Intent(Intent.ACTION_SEND)
+                    intent.type = CONTENT_TYPE_IMAGE
+                    intent.putExtra(Intent.EXTRA_STREAM, shareUri)
+                    intent.addFlags(FLAG_GRANT_WRITE_URI_PERMISSION)
+                    startActivity(
+                        Intent.createChooser(
+                            intent,
+                            "I would like to share with you an interesting picture."
+                        )
+                    )
+                }
             } ?: kotlin.run {
                 Timber.e("Drawable is null, no sharing can be done.")
                 showCustomMessage(getString(R.string.txt_error_no_picture_saved))
@@ -216,10 +234,20 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         apiLanguageId?.let { apiCurrentLanguageId ->
             model.userSettingsResource.value?.data?.let {
                 Timber.i("User settings exist already! Let us update them.")
-                model.createOrUpdateUserSettings(true, apiCurrentLanguageId, sendNotifications, notificationTime)
+                model.createOrUpdateUserSettings(
+                    true,
+                    apiCurrentLanguageId,
+                    sendNotifications,
+                    notificationTime
+                )
             } ?: run {
                 Timber.i("User settings are null! We must create new.")
-                model.createOrUpdateUserSettings(false, apiCurrentLanguageId, sendNotifications, notificationTime)
+                model.createOrUpdateUserSettings(
+                    false,
+                    apiCurrentLanguageId,
+                    sendNotifications,
+                    notificationTime
+                )
             }
         }
 
@@ -311,7 +339,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     }
 
     private fun scheduleNotifications(notificationTime: LocalTime) {
-        wakefulReceiver?.setAlarm(applicationContext, notificationTime.hourOfDay, notificationTime.minuteOfHour)
+        wakefulReceiver?.setAlarm(
+            applicationContext,
+            notificationTime.hourOfDay,
+            notificationTime.minuteOfHour
+        )
         Timber.i("Notification was scheduled.")
     }
 
@@ -397,14 +429,17 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
                                 // init languages
                                 languageArrayAdapter = ArrayAdapter(
-                                    this, R.layout.custom_spinner_textview, listOfLanguages.toTypedArray()
+                                    this,
+                                    R.layout.custom_spinner_textview,
+                                    listOfLanguages.toTypedArray()
                                 )
                                 languageArrayAdapter!!.setDropDownViewResource(R.layout.custom_spinner_dropdown_item)
                                 spnLanguage.adapter = languageArrayAdapter
 
                                 if (model.userSettingsResource.value != null && model.userSettingsResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
                                     && model.motivatorResource.value != null && model.motivatorResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
-                                    && resource.apiStatus == Constants.ApiStatus.SUCCESS) {
+                                    && resource.apiStatus == Constants.ApiStatus.SUCCESS
+                                ) {
                                     Timber.i("All done by languageResource!")
                                     setLanguageAndDailyPicture()
                                 } else {
@@ -467,7 +502,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                             it.notificationTime.hourOfDay.toString()
                         }
 
-                        txtMinutes.text = if(it.notificationTime.minuteOfHour < 10) {
+                        txtMinutes.text = if (it.notificationTime.minuteOfHour < 10) {
                             "0${it.notificationTime.minuteOfHour}"
                         } else {
                             it.notificationTime.minuteOfHour.toString()
@@ -505,7 +540,8 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
             if (model.listOfLanguages.value != null && model.listOfLanguages.value!!.apiStatus == Constants.ApiStatus.SUCCESS
                 && model.motivatorResource.value != null && model.motivatorResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
-                && resource.apiStatus == Constants.ApiStatus.SUCCESS) {
+                && resource.apiStatus == Constants.ApiStatus.SUCCESS
+            ) {
                 Timber.i("All done by loading userSettings resource!")
                 setLanguageAndDailyPicture()
             } else {
@@ -513,10 +549,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             }
         })
 
-        model.motivatorResource.observe(this, Observer<Resource<Motivator>>{
+        model.motivatorResource.observe(this, Observer<Resource<Motivator>> {
             if (model.listOfLanguages.value != null && model.listOfLanguages.value!!.apiStatus == Constants.ApiStatus.SUCCESS
                 && model.userSettingsResource.value != null && model.userSettingsResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
-                && it.apiStatus == Constants.ApiStatus.SUCCESS) {
+                && it.apiStatus == Constants.ApiStatus.SUCCESS
+            ) {
                 Timber.i("All done by loading motivatorResource!")
                 setLanguageAndDailyPicture()
             } else {
@@ -699,48 +736,72 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
      */
     private fun getDailyPictureAndSet(apiLanguageId: Int) {
         Timber.i("Method = getDailyPictureAndSet")
+        // get actual DateTime
+        var dateTimeNow = DateTime.now()
+
         model.motivatorResource.value?.data?.let {
-            Timber.i("We have record from DB.")
-            if (UtilHelper.shouldLoadFromApiNew(it.lastDownloadAt)) {
+            Timber.d("Motivator resource exists.")
+            if (UtilHelper.shouldLoadFromApiNew(dateTimeNow, it.lastDownloadAt)) {
                 Timber.d("Shall load new picture.")
-                deletePreviousPicture()
+                deletePreviousPicture(dateTimeNow.minusDays(1))
                 // download new
-                downloadNewAndUpdateDb(apiLanguageId)
+                downloadNewAndUpdateDb(apiLanguageId, dateTimeNow)
             } else {
-                Timber.i("Picture already exists on storage, will load from there.")
-                loadPictureFromStorage(getLocalMotivatorFile().absolutePath)
+                Timber.i(
+                    "Picture already exists on storage, will load from there. Path to load from is ${
+                        getLocalMotivatorFile(
+                            dateTimeNow
+                        ).absolutePath
+                    }"
+                )
+                loadPictureFromStorage(getLocalMotivatorFile(dateTimeNow).absolutePath)
             }
         } ?: kotlin.run {
-            Timber.i("Motivator resource is null, there is no record yet.")
-            downloadNewAndUpdateDb(apiLanguageId)
+            Timber.d("Motivator resource is null, there is no record yet.")
+            downloadNewAndUpdateDb(apiLanguageId, dateTimeNow)
         }
     }
 
-    private fun deletePreviousPicture() {
-        val localFile = getLocalMotivatorFile()
+    private fun deletePreviousPicture(dateTime: DateTime) {
+        val dir = getMotivatorDir(dateTime)
+        Timber.i("Motivator subDir is $dir")
+        val deleted = deleteRecursive(dir)
 
-        if(localFile.exists()){
-            val deleted = localFile.delete()
-
-            if(deleted){
-                Timber.i("File exists on the storage: ${localFile.absolutePath} and has been successfully deleted.")
-            } else {
-                Timber.e("File exists on the storage: ${localFile.absolutePath} but could not be deleted.")
-            }
+        if (deleted) {
+            Timber.i("Directory was successfully deleted.")
         } else {
-            Timber.e("File = ${localFile.absolutePath} does not exists on the storage!")
+            Timber.e("Directory was not deleted.")
+        }
+    }
+
+    private fun deleteRecursive(fileOrDirectory: File): Boolean {
+        try {
+            if (fileOrDirectory.isDirectory) {
+
+                val listOfFiles = fileOrDirectory.listFiles()
+                listOfFiles?.let {
+                    for (child in listOfFiles) deleteRecursive(
+                        child
+                    )
+                }
+            }
+
+            return fileOrDirectory.delete()
+
+        } catch (e: Exception) {
+            Timber.e("We could not delete the directory.")
+            return false
         }
     }
 
     /**
      * Main method which generates api url for the day and update db.
      */
-    private fun downloadNewAndUpdateDb(apiLanguageId: Int){
-        Timber.i("New picture will be downloaded. height = ${getHeight()}, width = ${getWidth()}, Lang id = $apiLanguageId.")
-        val apiUrl = UtilHelper.getApiUrl(apiLanguageId, getHeight(), getWidth())
+    private fun downloadNewAndUpdateDb(apiLanguageId: Int, dateTime: DateTime){
+        val apiUrl = UtilHelper.getApiUrl(apiLanguageId, getHeight(), getWidth(), dateTime)
+        Timber.d("New picture will be downloaded. height = ${getHeight()}, width = ${getWidth()}, Lang id = $apiLanguageId, dateTime = $dateTime.")
         Timber.i("apiUrl = $apiUrl.")
-
-        loadPictureAndStore(apiUrl)
+        loadPictureAndStore(apiUrl, dateTime)
     }
 
     private fun loadPictureFromStorage(url: String){
@@ -758,7 +819,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     /**
      * Get picture from URL and store into file (prepare for sharing) and load it into placeholder of image.
      */
-    private fun loadPictureAndStore(url: String) {
+    private fun loadPictureAndStore(url: String, dateTime: DateTime) {
         if (UtilHelper.isNetworkAvailable(this)) {
             motivatorOfDay?.let {
                 Glide
@@ -766,15 +827,26 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     .load(url)
                     .centerCrop()
                     .listener(object : RequestListener<Drawable> {
-                        override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean): Boolean {
+                        override fun onLoadFailed(
+                            e: GlideException?,
+                            model: Any?,
+                            target: Target<Drawable>?,
+                            isFirstResource: Boolean
+                        ): Boolean {
                             Timber.e("Resource failed to load.")
                             return false
                         }
 
-                        override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: DataSource?, isFirstResource: Boolean): Boolean {
+                        override fun onResourceReady(
+                            resource: Drawable?,
+                            model: Any?,
+                            target: Target<Drawable>?,
+                            dataSource: DataSource?,
+                            isFirstResource: Boolean
+                        ): Boolean {
                             resource?.let { drawable ->
                                 if (url.contains(HTTP_CONST)) {
-                                    val localFile = getLocalMotivatorFile()
+                                    val localFile = getLocalMotivatorFile(dateTime)
                                     Timber.i("Path to store is ${localFile.absolutePath}")
 
                                     if (!localFile.exists()) {
@@ -806,12 +878,12 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                                         )
                                     }
 
-                                    // get date now
-                                    updateLastDownloadedAt(DateTime.now())
+                                    // update
+                                    updateLastDownloadedAt(dateTime)
                                 } else {
                                     Timber.w("Not need to store new motivator. Path to load = $url.")
                                 }
-                            }?: kotlin.run {
+                            } ?: kotlin.run {
                                 Timber.e("Loaded resource is null.")
                             }
 
@@ -858,7 +930,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         return size.x
     }
 
-    private fun getLocalMotivatorFile(): File = File(filesDir, "/images/$MOTIVATOR_NAME")
+    private fun getLocalMotivatorFile(dateTime: DateTime): File = File(
+        filesDir,
+        "/$ROOT_MOTIVATORS_DIR/${dateTime.dayOfYear}/$MOTIVATOR_NAME"
+    )
+    private fun getMotivatorDir(dateTime: DateTime): File = File(filesDir, "/$ROOT_MOTIVATORS_DIR/${dateTime.dayOfYear}/")
 
     private fun showCustomMessage(stringMessage: String){
         val snackBar: Snackbar = Snackbar

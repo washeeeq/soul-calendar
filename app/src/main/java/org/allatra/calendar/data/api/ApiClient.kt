@@ -1,5 +1,6 @@
 package org.allatra.calendar.data.api
 
+import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.allatra.calendar.common.Constants.API_URL
@@ -7,6 +8,7 @@ import org.allatra.calendar.common.Constants.BASE_URL
 import org.allatra.calendar.common.Constants.CONNECT_READ_TIMEOUT
 import org.allatra.calendar.common.Constants.CONNECT_TIMEOUT_SEC
 import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
@@ -21,6 +23,7 @@ object ApiClient {
             .baseUrl(BASE_URL)
             .client(getClient())
             .addConverterFactory(GsonConverterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
             .build()
     }
 

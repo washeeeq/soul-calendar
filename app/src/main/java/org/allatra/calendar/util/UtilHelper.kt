@@ -23,10 +23,10 @@ object UtilHelper {
     return "https://calendar.allatra.info/motivators/get_image?screen_resolution=\(resolution)&language_id=\(currentLanguage.id)&day=\(day)&month=\(month)&year=\(year)"
     }
      */
-    fun getApiUrl(languageId: Int, screenHeight: Int, screenWidth: Int): String {
+    fun getApiUrl(languageId: Int, screenHeight: Int, screenWidth: Int, dateTime: DateTime): String {
         val date = DateTime.now()
         val screenResolution = "${screenHeight}x${screenWidth}"
-        return "${Constants.API_URL}${Constants.API_PARAM_SC}=${screenResolution}&${Constants.API_PARAM_LI}=$languageId&day=${date.dayOfMonth().get()}&month=${date.monthOfYear().get()}&year=${date.year}"
+        return "${Constants.API_URL}${Constants.API_PARAM_SC}=${screenResolution}&${Constants.API_PARAM_LI}=$languageId&day=${dateTime.dayOfMonth}&month=${dateTime.monthOfYear}&year=${dateTime.year}"
     }
 
 
@@ -57,8 +57,8 @@ object UtilHelper {
     /**
      * Check downloadedAt timestamp against new.
      */
-    fun shouldLoadFromApiNew(downloadedAt: DateTime): Boolean {
-        val dateTimeNow = DateTime()
+    fun shouldLoadFromApiNew(dateTimeNow: DateTime, downloadedAt: DateTime): Boolean {
+        Timber.d("Comparing downloadedAt = $downloadedAt, dateTimeNow = $dateTimeNow")
 
         val dayDownloaded = downloadedAt.dayOfYear
         val dayOfNow = dateTimeNow.dayOfYear

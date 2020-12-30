@@ -1,9 +1,13 @@
 package org.allatra.calendar.ui.viewmodel
 
+import android.annotation.SuppressLint
 import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.reactivex.Observable
+import io.reactivex.functions.BiFunction
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
@@ -23,6 +27,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 class CalendarViewModel(
     application: Application
@@ -59,7 +64,7 @@ class CalendarViewModel(
             repository.getMotivator().collect {
                 // cancel the context, we need to fetch only once
                 coroutineContext.cancel()
-                Timber.i("We have fetched motivatorobject = $it.")
+                Timber.i("We have fetched motivatorObject = $it.")
                 _motivatorResource.postValue(Resource.success(it))
             }
         }
@@ -144,32 +149,50 @@ class CalendarViewModel(
         }
     }
 
+    @SuppressLint("CheckResult")
     private fun fetchLanguagesFromApi() {
         _listOfLanguages.postValue(Resource.loading(null))
-        val request = repository.getLanguagesFromApi()
-        request.enqueue(object: Callback<LanguageResource> {
-            override fun onResponse(
-                call: Call<LanguageResource>,
-                response: Response<LanguageResource>
-            ) {
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                        // post it
-                        _listOfLanguages.postValue(Resource.success(it))
-                    } ?: kotlin.run {
-                        Timber.e("No body returned!")
-                        _listOfLanguages.postValue(Resource.error(Constants.ErrorType.BACKEND_API, null))
+        repository.getLanguagesFromApi()
+            .subscribeOn(Schedulers.io())
+            .retryWhen { errorObservable ->
+                errorObservable.zipWith(Observable.range(1, 3), BiFunction { throwable: Throwable, count: Int -> Pair(throwable, count) })
+                    .flatMap { count: Pair<Throwable, Int> ->
+                        if (count.second < 3) {
+                            Observable.timer(3, TimeUnit.SECONDS)
+                        } else {
+                            Observable.error(count.first)
+                        }
                     }
-                } else {
+            }
+            .subscribe ({ response ->
+                response?.let {
+                    if (response.ok) {
+                        response.data
+                        _listOfLanguages.postValue(Resource.success(response))
+                    } else {
+                        Timber.e("Call ended with error.")
+                        _listOfLanguages.postValue(
+                            Resource.error(
+                                Constants.ErrorType.BACKEND_API,
+                                null
+                            )
+                        )
+                    }
+                } ?: kotlin.run {
                     Timber.e("Call ended with error.")
+                    _listOfLanguages.postValue(
+                        Resource.error(
+                            Constants.ErrorType.BACKEND_API,
+                            null
+                        )
+                    )
+                }
+                        }
+                ,
+                {
+                    Timber.e("Call ended with failure.")
                     _listOfLanguages.postValue(Resource.error(Constants.ErrorType.BACKEND_API, null))
                 }
-            }
-
-            override fun onFailure(call: Call<LanguageResource>, t: Throwable) {
-                Timber.e("Call ended with failure.")
-                _listOfLanguages.postValue(Resource.error(Constants.ErrorType.BACKEND_API, null))
-            }
-        })
+            )
     }
 }
