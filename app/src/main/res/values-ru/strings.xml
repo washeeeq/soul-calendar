@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Календарь для души</string>
-    <string name="splash_screen_desc">Изображение заставки</string>
     <string name="txt_settings">Настройки</string>
     <string name="txt_select_language">Выберите язык для цитат</string>
     <string name="txt_allow_notifications">Разрешить ежедневные уведомления</string>

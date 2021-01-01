@@ -4,6 +4,8 @@
     android:id="@+id/textLang"
     android:singleLine="true"
     android:gravity="start"
+    android:paddingEnd="2dp"
+    android:paddingStart="1dp"
     android:textAlignment="textStart"
     android:layout_width="match_parent"
     android:layout_height="match_parent"

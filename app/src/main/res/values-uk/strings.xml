@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Календар для душі</string>
+    <string name="txt_settings">Настройки</string>
+    <string name="txt_select_language">Виберіть мову для цитат</string>
+    <string name="txt_allow_notifications">Дозволити щоденні повідомлення</string>
+    <string name="txt_time_of_notification">Час повідомлень</string>
+    <string name="txt_share">Поділитись</string>
+    <string name="txt_btn_cancel">Відмінити</string>
+    <string name="txt_btn_save">Зберегти</string>
+    <string name="txt_default_minute">00</string>
+    <string name="txt_div_min_hour">:</string>
+    <string name="txt_default_hour">10</string>
+    <string name="txt_notification_arrived">Ура! Нова фраза дня!</string>
+    <string name="txt_error_no_picture_saved">Картинка не зберігається. Будь ласка підключіть Wi-Fi або скористайтесь мобільним інтернетом</string>
+    <string name="txt_warn_no_notifications_will_deliver">Жодні повідомлення показуватись не будуть!</string>
+    <string name="error_backend_failure">Виникла проблема з сервером. Будь ласка спробуйте пізніше.</string>
+    <string name="error_local_db_failure">Виникла проблема з локальною базою данних. Повторіть спробу пізніше або зверніться в службу підтримки.</string>
+    <string name="error_network_failure">Ваш пристрій не підключено до мережі. Будь ласка скористайтесь Wi-Fi або іншим інтернет сполученням</string>
+</resources>

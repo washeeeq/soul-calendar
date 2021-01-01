@@ -62,7 +62,6 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private val hideAnimationDurationSec = 100L
     private var itemElementHeight: Float = 0f
     private val hidePercentage = 0.41f
-    private lateinit var isLoading: MutableLiveData<Boolean>
     private var languageArrayAdapter: ArrayAdapter<String>? = null
     private var wakefulReceiver: WakefulReceiver? = null
     private lateinit var model: CalendarViewModel
@@ -179,7 +178,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
          * Save all changed settings to DB.
          */
         btnSave.setOnClickListener {
-            isLoading.postValue(true)
+            loader.show()
             updateDbAndSchedule()
 
             showOrHideSettings()
@@ -284,7 +283,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
 
         Thread.sleep(500)
-        isLoading.postValue(false)
+        loader.hide()
     }
 
     private fun getCurrentApiLanguageId(mapOfLanguages: Map<Int, String>, languageCode: String): String? {
@@ -425,7 +424,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             Observer<Resource<LanguageResource>> { resource ->
                 when (resource.apiStatus) {
                     Constants.ApiStatus.SUCCESS -> {
-                        isLoading.postValue(false)
+                        loader.hide()
                         val listOfLanguages = mutableListOf<String>()
                         Timber.i("Received data from api.")
 
@@ -477,7 +476,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     }
 
                     Constants.ApiStatus.ERROR -> {
-                        isLoading.postValue(false)
+                        loader.hide()
                         resource.errorType?.let {
                             when (it) {
                                 Constants.ErrorType.BACKEND_API -> {
@@ -494,7 +493,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     }
 
                     Constants.ApiStatus.LOADING -> {
-                        isLoading.postValue(true)
+                        loader.show()
                     }
                 }
             })
@@ -592,16 +591,6 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             duration = hideAnimationDurationSec
             start()
         }
-
-        isLoading = MutableLiveData()
-
-        isLoading.observe(this, Observer { updatingDb ->
-            if (updatingDb) {
-                loader.show()
-            } else {
-                loader.hide()
-            }
-        })
     }
 
     private fun setLanguageAndDailyPicture() {
