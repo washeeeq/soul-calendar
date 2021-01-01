@@ -2,20 +2,19 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'realm-android'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     buildToolsVersion "29.0.3"
 
     defaultConfig {
         applicationId "org.allatra.calendar"
         minSdkVersion 19
-        targetSdkVersion 29
-        versionCode 4
-        versionName "1.2.1"
+        targetSdkVersion 30
+        versionCode 6
+        versionName "1.3.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
@@ -58,10 +57,25 @@ dependencies {
     // Kotlin + coroutines
     implementation "androidx.work:work-runtime-ktx:2.4.0"
 
+    // Retrofit for api calls
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.9.1'
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofit_version"
+    // RX for observables for backend calls
+    implementation "io.reactivex.rxjava2:rxandroid:2.1.1"
+
+    // androidx lifecycle
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.2.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
+    // local db
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+
     implementation 'com.thelittlefireman:AppKillerManager:2.1.1'
     // Recommended: Add the Firebase SDK for Google Analytics.
-    implementation 'com.google.firebase:firebase-analytics-ktx:17.5.0'
-
+    implementation 'com.google.firebase:firebase-analytics-ktx:18.0.0'
     // Add the Firebase Crashlytics SDK.
-    implementation 'com.google.firebase:firebase-crashlytics-ktx:17.2.1'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx:17.3.0'
 }

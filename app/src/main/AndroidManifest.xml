@@ -22,13 +22,13 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/filepaths" />
         </provider>
-        <activity android:name=".ui.activity.SplashActivity" >
+        <activity android:name="org.allatra.calendar.ui.view.activity.SplashActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.activity.CalendarActivity">
+        <activity android:name="org.allatra.calendar.ui.view.activity.CalendarActivity">
         </activity>
         <receiver android:name=".service.WakefulReceiver"/>
     </application>

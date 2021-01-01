@@ -11,7 +11,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import org.allatra.calendar.R
-import org.allatra.calendar.ui.activity.CalendarActivity
+import org.allatra.calendar.ui.view.activity.CalendarActivity
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import timber.log.Timber

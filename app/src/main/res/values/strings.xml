@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Calendar for the Soul</string>
-    <string name="splash_screen_desc">Image of splash screen</string>
+    <string name="splash_screen_desc" translatable="false">Image of splash screen</string>
     <string name="txt_settings">Settings</string>
     <string name="txt_select_language">Select the language for quotes</string>
     <string name="txt_allow_notifications">Allow everyday notifications</string>
@@ -14,8 +14,7 @@
     <string name="txt_notification_arrived">Yay! A new phrase of the day!</string>
     <string name="txt_error_no_picture_saved">The image wasn\'t saved. Please use a Wi-Fi or access the internet through your mobile network.</string>
     <string name="txt_warn_no_notifications_will_deliver">No notifications will be delivered!</string>
-    <string-array name="languages_image">
-        <item>ru</item>
-        <item>cancel</item>
-    </string-array>
+    <string name="error_backend_failure">There was a problem with backend server. Please try again later or contact our support.</string>
+    <string name="error_local_db_failure">There was a problem with local database. Please try again later or contact our support.</string>
+    <string name="error_network_failure">Your device is not connected to the Network. Please use Wifi or your data provider.</string>
 </resources>

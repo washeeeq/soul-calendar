@@ -5,13 +5,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.activity.SplashActivity">
+    tools:context=".ui.view.activity.SplashActivity">
 
     <ImageView
         android:id="@+id/imgSplashBackground"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="center"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bg_calendar"
         android:contentDescription="@string/splash_screen_desc"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

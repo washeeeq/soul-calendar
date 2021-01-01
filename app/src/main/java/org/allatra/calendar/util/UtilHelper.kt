@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import org.allatra.calendar.common.EnumDefinition
+import org.allatra.calendar.common.Constants
 import org.joda.time.DateTime
 import timber.log.Timber
 import java.util.*
@@ -23,63 +23,50 @@ object UtilHelper {
     return "https://calendar.allatra.info/motivators/get_image?screen_resolution=\(resolution)&language_id=\(currentLanguage.id)&day=\(day)&month=\(month)&year=\(year)"
     }
      */
-    fun getApiUrl(languageId: Int, screenHeight: Int, screenWidth: Int): String {
+    fun getApiUrl(languageId: Int, screenHeight: Int, screenWidth: Int, dateTime: DateTime): String {
         val date = DateTime.now()
         val screenResolution = "${screenHeight}x${screenWidth}"
-        return "${EnumDefinition.API_URL}${EnumDefinition.API_PARAM_SC}=${screenResolution}&${EnumDefinition.API_PARAM_LI}=$languageId&day=${date.dayOfMonth().get()}&month=${date.monthOfYear().get()}&year=${date.year}"
+        return "${Constants.API_URL}${Constants.API_PARAM_SC}=${screenResolution}&${Constants.API_PARAM_LI}=$languageId&day=${dateTime.dayOfMonth}&month=${dateTime.monthOfYear}&year=${dateTime.year}"
     }
+
 
     /**
      * Returns false when network is not connected.
      * Returns true when network is active.
      */
-    fun isConnected(context: Context): Boolean {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
-
-        cm?.let { connectivityM ->
-            if (Build.VERSION.SDK_INT < 23) {
-                return connectivityM.activeNetworkInfo != null && connectivityM.activeNetworkInfo.isConnected
-            } else {
-                val nc = connectivityM.getNetworkCapabilities(connectivityM.activeNetwork)
-
-                nc?.let {
-                    return it.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || it.hasTransport(
-                        NetworkCapabilities.TRANSPORT_WIFI)
-                }?: kotlin.run {
-                    Timber.e("System service Network capibilities returns null.")
-                    return false
-                }
+    fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val nw = connectivityManager.activeNetwork ?: return false
+            val actNw = connectivityManager.getNetworkCapabilities(nw) ?: return false
+            return when {
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                // for other device how are able to connect with Ethernet
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+                // for check internet over Bluetooth
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> true
+                else -> false
             }
-        }?: kotlin.run {
-            Timber.e("System service CONNECTIVITY_SERVICE returns null.")
-            return false
+        } else {
+            val nwInfo = connectivityManager.activeNetworkInfo ?: return false
+            return nwInfo.isConnected
         }
     }
 
     /**
      * Check downloadedAt timestamp against new.
      */
-    fun shouldLoadFromApiNew(downloadedAt: Date): Boolean {
-        val currentTime = Date()
-        val calendarCurrentTime = dateToCalendar(currentTime)
+    fun shouldLoadFromApiNew(dateTimeNow: DateTime, downloadedAt: DateTime): Boolean {
+        Timber.d("Comparing downloadedAt = $downloadedAt, dateTimeNow = $dateTimeNow")
 
-        val calendarDownloadedAt = dateToCalendar(downloadedAt)
+        val dayDownloaded = downloadedAt.dayOfYear
+        val dayOfNow = dateTimeNow.dayOfYear
 
-        val dayDownloaded = calendarDownloadedAt.get(Calendar.DAY_OF_MONTH)
-        val dayOfNow = calendarCurrentTime.get(Calendar.DAY_OF_MONTH)
-
-        return if(calendarDownloadedAt.get(Calendar.MONTH) == calendarCurrentTime.get(Calendar.MONTH)
-            && calendarDownloadedAt.get(Calendar.YEAR) == calendarCurrentTime.get(Calendar.YEAR) ){
+        return if(dayDownloaded == dayOfNow && downloadedAt.year == dateTimeNow.year) {
             dayOfNow > dayDownloaded
         } else {
             true
         }
-    }
-
-    //Convert Date to Calendar
-    private fun dateToCalendar(date: Date): Calendar {
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        return calendar
     }
 }

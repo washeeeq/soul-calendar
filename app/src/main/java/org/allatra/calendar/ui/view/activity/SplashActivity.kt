@@ -1,4 +1,4 @@
-package org.allatra.calendar.ui.activity
+package org.allatra.calendar.ui.view.activity
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -22,13 +22,6 @@ class SplashActivity : AppCompatActivity() {
 
         // set orientation to LANDSCAPE
         this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-
-        imgSplashBackground?.let {
-            Glide
-                .with(this)
-                .load(R.drawable.bg_mob)
-                .into(it)
-        }
 
         Handler().postDelayed(
             {
