@@ -11,6 +11,7 @@
     <string name="txt_default_minute">00</string>
     <string name="txt_div_min_hour">:</string>
     <string name="txt_default_hour">10</string>
+    <string name="txt_interesting_quote">I would like to share with you an interesting quote:</string>
     <string name="txt_notification_arrived">Yay! A new phrase of the day!</string>
     <string name="txt_error_no_picture_saved">The image wasn\'t saved. Please use a Wi-Fi or access the internet through your mobile network.</string>
     <string name="txt_warn_no_notifications_will_deliver">No notifications will be delivered!</string>

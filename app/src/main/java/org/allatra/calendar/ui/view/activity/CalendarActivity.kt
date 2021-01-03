@@ -3,6 +3,7 @@ package org.allatra.calendar.ui.view.activity
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -189,45 +190,29 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
          * Share picture.
          */
         shareLayoutGroup.setOnClickListener {
-            motivatorOfDay.drawable?.let {
-                model.motivatorResource.value?.data?.let {
-                    val localFile = getLocalMotivatorFile(it.lastDownloadAt)
-                    Timber.i("Path to load is ${localFile.absolutePath}")
+            model.motivatorResource.value?.data?.let {
+                val localFile = getLocalMotivatorFile(it.lastDownloadAt)
+                Timber.i("Path to load is ${localFile.absolutePath}")
 
-                    val shareUri = FileProvider.getUriForFile(
-                        applicationContext,
-                        applicationContext.packageName.toString() + FILE_PROVIDER,
-                        localFile
-                    )
+                val shareUri = FileProvider.getUriForFile(
+                    applicationContext,
+                    applicationContext.packageName.toString() + FILE_PROVIDER,
+                    localFile
+                )
 
-                    val intent = Intent(Intent.ACTION_SEND)
-                    intent.type = CONTENT_TYPE_IMAGE
-                    intent.putExtra(Intent.EXTRA_STREAM, shareUri)
-                    intent.addFlags(FLAG_GRANT_WRITE_URI_PERMISSION)
-                    startActivity(
-                        Intent.createChooser(
-                            intent,
-                            "I would like to share with you an interesting picture."
-                        )
+                val intent = Intent(Intent.ACTION_SEND)
+                intent.type = CONTENT_TYPE_IMAGE
+                intent.putExtra(Intent.EXTRA_STREAM, shareUri)
+                intent.addFlags(FLAG_GRANT_WRITE_URI_PERMISSION)
+                startActivity(
+                    Intent.createChooser(
+                        intent,
+                        getString(R.string.txt_interesting_quote)
                     )
-                }
-            } ?: kotlin.run {
+                )
+            }?: kotlin.run {
                 Timber.e("Drawable is null, no sharing can be done.")
                 showCustomMessage(getString(R.string.txt_error_no_picture_saved))
-            }
-        }
-
-        /**
-         * Od listener to reflect changes.
-         */
-        spnLanguage.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(adapterView: AdapterView<*>?, view: View?, position: Int, l: Long) {
-                val pos = position
-
-
-            }
-
-            override fun onNothingSelected(p0: AdapterView<*>?) {
             }
         }
     }
@@ -263,10 +248,24 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        // TODO: We shall check on resume
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         // deregister on quit
         unregisterReceiver(wakefulReceiver)
+    }
+
+    private fun getSelectedLanguageCode(): String {
+        return spnLanguage.selectedItem?.let {
+            it.toString()
+        }?: kotlin.run {
+            DEFAULT_LOCALE
+        }
     }
 
     private fun showLoader() {
@@ -300,9 +299,9 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     sendNotifications,
                     notificationTime
                 )
-                val currentApiLanguageId = getApiLanguageId(it.apiLanguageId)
-                if (newApiLanguageId != currentApiLanguageId) {
-                    Timber.d("newApiLanguageId = $newApiLanguageId, currentApiLanguageId = $currentApiLanguageId")
+
+                if (newApiLanguageId != it.apiLanguageId) {
+                    Timber.d("newApiLanguageId = $newApiLanguageId, currentApiLanguageId = ${it.apiLanguageId}")
                     languageChanged = true
                 }
 
@@ -322,8 +321,9 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
 
         if (languageChanged) {
+            Timber.i("Language was changed, new pic will be loaded.")
             newApiLanguageId?.let {
-                forceSetNewDailyPicture(it.toInt())
+                forceSetNewDailyPicture(it.toInt(), languageCodeString)
             }?:run {
                 Timber.e("newApiLanguageId is null cannot set the picture!")
             }
@@ -482,6 +482,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
          */
         model.languagesResource.observe(this,
             Observer { resource ->
+                Timber.d("languagesResource, observed = ${resource.apiStatus}")
                 when (resource.apiStatus) {
                     Constants.ApiStatus.SUCCESS -> {
                         // Remove all observers
@@ -489,7 +490,6 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                         Timber.d("languagesResource returned SUCCESS, removing all observers.")
                         loader.hide()
                         val listOfLanguages = mutableListOf<String>()
-                        Timber.i("Received data from api.")
 
                         resource.data?.let {
                             Timber.i(resource.data.toString())
@@ -565,6 +565,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
          * Let us observe on user settings.
          */
         model.userSettingsResource.observe(this, Observer { resource ->
+            Timber.d("userSettingsResource, observed = ${resource.apiStatus}")
             when (resource.apiStatus) {
                 Constants.ApiStatus.SUCCESS -> {
                     Timber.d("userSettingsResource returned SUCCESS, removing all observers.")
@@ -641,6 +642,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
          * Observe on motivator resource.
          */
         model.motivatorResource.observe(this, Observer {
+            Timber.d("motivatorResource, observed = ${it.apiStatus}")
             if (it.apiStatus == Constants.ApiStatus.SUCCESS) {
                 Timber.d("Returned status = SUCCESS, removing all observers from motivatorResource")
                 // remove all observers
@@ -818,10 +820,10 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
     }
 
-    private fun forceSetNewDailyPicture(apiLanguageId: Int) {
+    private fun forceSetNewDailyPicture(apiLanguageId: Int, languageCode: String) {
         val dateTimeNow = DateTime.now()
         // delete pic from today
-        deletePreviousPicture(dateTimeNow)
+        deletePreviousPicture(dateTimeNow, languageCode)
         // load new one
         downloadNewAndUpdateDb(apiLanguageId, dateTimeNow)
     }
@@ -838,7 +840,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
             Timber.d("Motivator resource exists.")
             if (UtilHelper.shouldLoadFromApiNew(dateTimeNow, it.lastDownloadAt)) {
                 Timber.d("Shall load new picture.")
-                deletePreviousPicture(dateTimeNow.minusDays(1))
+                deletePreviousPicture(dateTimeNow.minusDays(1), null)
                 // download new
                 downloadNewAndUpdateDb(apiLanguageId, dateTimeNow)
             } else {
@@ -857,8 +859,13 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
     }
 
-    private fun deletePreviousPicture(dateTime: DateTime) {
-        val dir = getMotivatorDir(dateTime)
+    private fun deletePreviousPicture(dateTime: DateTime, languageCode: String?) {
+        val dir = if (languageCode != null) {
+            getMotivatorDir(dateTime, languageCode)
+        } else {
+            getMotivatorDir(dateTime)
+        }
+
         Timber.i("Motivator subDir is $dir")
         val deleted = deleteRecursive(dir)
 
@@ -1027,9 +1034,10 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
     private fun getLocalMotivatorFile(dateTime: DateTime): File = File(
         filesDir,
-        "/$ROOT_MOTIVATORS_DIR/${dateTime.dayOfYear}/$MOTIVATOR_NAME"
+        "/$ROOT_MOTIVATORS_DIR/${getSelectedLanguageCode()}/${dateTime.dayOfYear}/$MOTIVATOR_NAME"
     )
-    private fun getMotivatorDir(dateTime: DateTime): File = File(filesDir, "/$ROOT_MOTIVATORS_DIR/${dateTime.dayOfYear}/")
+    private fun getMotivatorDir(dateTime: DateTime): File = File(filesDir, "/$ROOT_MOTIVATORS_DIR/${getSelectedLanguageCode()}/${dateTime.dayOfYear}/")
+    private fun getMotivatorDir(dateTime: DateTime, languageCode: String): File = File(filesDir, "/$ROOT_MOTIVATORS_DIR/${languageCode}/${dateTime.dayOfYear}/")
 
     private fun showCustomMessage(stringMessage: String){
         val snackBar: Snackbar = Snackbar

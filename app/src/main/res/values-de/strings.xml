@@ -16,4 +16,5 @@
     <string name="error_backend_failure">Es gab ein Problem mit dem Server. Bitte versuchen Sie es später erneut oder kontaktieren Sie unseren Support.</string>
     <string name="error_local_db_failure">Es gab ein Problem mit der lokalen Datenbank. Bitte versuchen Sie es später erneut oder kontaktieren Sie unseren Support.</string>
     <string name="error_network_failure">Ihr Gerät ist nicht mit dem Netzwerk verbunden. Bitte nutzen Sie eine Verbindung zu WLAN- oder zu Ihrem Mobilfunk-Netzwerk</string>
+    <string name="txt_interesting_quote">Ich möchte Ihnen ein interessantes Zitat mitteilen:</string>
 </resources>

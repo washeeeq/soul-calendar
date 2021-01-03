@@ -12,6 +12,7 @@
     <color name="colorTransparent75">#BEFFFFFF</color>
     <color name="colorBlackAlpha20">#32000000</color>
     <color name="colorBtnSave">#A1CD92ED</color>
+    <color name="colorBtnCancel">#75EEC4F1</color>
     <color name="colorClock">#bd76c6</color>
     <color name="colorDropDownLangBg">#9b3c94</color>
 </resources>

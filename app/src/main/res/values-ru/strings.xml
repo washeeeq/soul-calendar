@@ -16,4 +16,5 @@
     <string name="error_backend_failure">Сервер не работает. Пожалуйста, попробуйте позже.</string>
     <string name="error_local_db_failure">Возникла проблема с локальной базой данных. Повторите попытку позже или обратитесь в нашу службу поддержки.</string>
     <string name="error_network_failure">Ваше устройство не подключено к сети. Пожалуйста, используйте Wi-Fi или иное интернет подключение</string>
+    <string name="txt_interesting_quote">Хочу поделиться с вами интересной цитатой:</string>
 </resources>
