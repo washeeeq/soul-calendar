@@ -30,6 +30,6 @@
         </activity>
         <activity android:name="org.allatra.calendar.ui.view.activity.CalendarActivity">
         </activity>
-        <receiver android:name=".service.WakefulReceiver"/>
+        <receiver android:name="org.allatra.calendar.data.service.WakefulReceiver"/>
     </application>
 </manifest>

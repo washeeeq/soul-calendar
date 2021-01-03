@@ -5,6 +5,8 @@ import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
@@ -18,14 +20,11 @@ import org.allatra.calendar.common.Constants.DEFAULT_USER_SETTINGS_ID
 import org.allatra.calendar.data.api.model.Resource
 import org.allatra.calendar.data.api.resource.LanguageResource
 import org.allatra.calendar.data.repository.CalendarRepository
-import org.allatra.calendar.db.AppDatabase
-import org.allatra.calendar.db.entity.Motivator
-import org.allatra.calendar.db.entity.UserSettings
+import org.allatra.calendar.data.db.AppDatabase
+import org.allatra.calendar.data.db.entity.Motivator
+import org.allatra.calendar.data.db.entity.UserSettings
 import org.joda.time.DateTime
 import org.joda.time.LocalTime
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -35,12 +34,12 @@ class CalendarViewModel(
     // get repository
     private val repository = CalendarRepository(AppDatabase.getDatabase(application).userSettingsDao(), AppDatabase.getDatabase(application).motivatorDao())
     // get api languages
-    private val _listOfLanguages = MutableLiveData<Resource<LanguageResource>>()
+    private val _languagesResource = MutableLiveData<Resource<LanguageResource>>()
     private val _userSettingsResource = MutableLiveData<Resource<UserSettings>>()
     private val _motivatorResource = MutableLiveData<Resource<Motivator>>()
     // getter
-    val listOfLanguages: MutableLiveData<Resource<LanguageResource>>
-        get() = _listOfLanguages
+    val languagesResource: MutableLiveData<Resource<LanguageResource>>
+        get() = _languagesResource
 
     val userSettingsResource: MutableLiveData<Resource<UserSettings>>
         get() = _userSettingsResource
@@ -85,6 +84,53 @@ class CalendarViewModel(
         }
     }
 
+    @SuppressLint("CheckResult")
+    private fun fetchLanguagesFromApi() {
+        _languagesResource.postValue(Resource.loading(null))
+        repository.getLanguagesFromApi()
+            .subscribeOn(Schedulers.io())
+            .retryWhen { errorObservable ->
+                errorObservable.zipWith(Observable.range(1, 3), BiFunction { throwable: Throwable, count: Int -> Pair(throwable, count) })
+                    .flatMap { count: Pair<Throwable, Int> ->
+                        if (count.second < 3) {
+                            Observable.timer(3, TimeUnit.SECONDS)
+                        } else {
+                            Observable.error(count.first)
+                        }
+                    }
+            }
+            .subscribe ({ response ->
+                response?.let {
+                    if (response.ok) {
+                        response.data
+                        _languagesResource.postValue(Resource.success(response))
+                    } else {
+                        Timber.e("Call ended with error.")
+                        _languagesResource.postValue(
+                            Resource.error(
+                                Constants.ErrorType.BACKEND_API,
+                                null
+                            )
+                        )
+                    }
+                } ?: kotlin.run {
+                    Timber.e("Call ended with error.")
+                    _languagesResource.postValue(
+                        Resource.error(
+                            Constants.ErrorType.BACKEND_API,
+                            null
+                        )
+                    )
+                }
+            }
+                ,
+                {
+                    Timber.e("Call ended with failure.")
+                    _languagesResource.postValue(Resource.error(Constants.ErrorType.BACKEND_API, null))
+                }
+            )
+    }
+
     /**
      * Creates or updates existing user settings
      */
@@ -124,14 +170,26 @@ class CalendarViewModel(
                 Timber.e("_userSettings are null..")
             }
         } else {
-            // create new
-            viewModelScope.launch(Dispatchers.IO) {
-                val userSettings = UserSettings(DEFAULT_USER_SETTINGS_ID, apiLanguageId, sendNotifications, notificationTime)
-                repository.insertUserSettings(userSettings)
-                Timber.i("New values has been stored userSettings = $userSettings")
-                // post it
-                _userSettingsResource.postValue(Resource.success(userSettings))
-            }
+            // Get the FCM registration token
+            FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Timber.w("Fetching FCM registration token failed, ${task.exception}")
+                    return@OnCompleteListener
+                }
+
+                // Get new FCM registration token
+                val token = task.result.toString()
+                Timber.i("Token has been successfully fetched, token: ${token}")
+
+                // create new
+                viewModelScope.launch(Dispatchers.IO) {
+                    val userSettings = UserSettings(DEFAULT_USER_SETTINGS_ID, apiLanguageId, sendNotifications, notificationTime, token)
+                    repository.insertUserSettings(userSettings)
+                    Timber.i("New values has been stored userSettings = $userSettings")
+                    // post it
+                    _userSettingsResource.postValue(Resource.success(userSettings))
+                }
+            })
         }
     }
 
@@ -147,52 +205,5 @@ class CalendarViewModel(
                 repository.insertMotivator(motivator)
             }
         }
-    }
-
-    @SuppressLint("CheckResult")
-    private fun fetchLanguagesFromApi() {
-        _listOfLanguages.postValue(Resource.loading(null))
-        repository.getLanguagesFromApi()
-            .subscribeOn(Schedulers.io())
-            .retryWhen { errorObservable ->
-                errorObservable.zipWith(Observable.range(1, 3), BiFunction { throwable: Throwable, count: Int -> Pair(throwable, count) })
-                    .flatMap { count: Pair<Throwable, Int> ->
-                        if (count.second < 3) {
-                            Observable.timer(3, TimeUnit.SECONDS)
-                        } else {
-                            Observable.error(count.first)
-                        }
-                    }
-            }
-            .subscribe ({ response ->
-                response?.let {
-                    if (response.ok) {
-                        response.data
-                        _listOfLanguages.postValue(Resource.success(response))
-                    } else {
-                        Timber.e("Call ended with error.")
-                        _listOfLanguages.postValue(
-                            Resource.error(
-                                Constants.ErrorType.BACKEND_API,
-                                null
-                            )
-                        )
-                    }
-                } ?: kotlin.run {
-                    Timber.e("Call ended with error.")
-                    _listOfLanguages.postValue(
-                        Resource.error(
-                            Constants.ErrorType.BACKEND_API,
-                            null
-                        )
-                    )
-                }
-                        }
-                ,
-                {
-                    Timber.e("Call ended with failure.")
-                    _listOfLanguages.postValue(Resource.error(Constants.ErrorType.BACKEND_API, null))
-                }
-            )
     }
 }

@@ -1,4 +1,4 @@
-package org.allatra.calendar.db
+package org.allatra.calendar.data.db
 
 import android.content.Context
 import androidx.room.Database
@@ -6,11 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import org.allatra.calendar.common.Constants.DB_NAME
-import org.allatra.calendar.db.conv.Converters
-import org.allatra.calendar.db.dao.MotivatorDao
-import org.allatra.calendar.db.dao.UserSettingsDao
-import org.allatra.calendar.db.entity.Motivator
-import org.allatra.calendar.db.entity.UserSettings
+import org.allatra.calendar.data.db.conv.Converters
+import org.allatra.calendar.data.db.dao.MotivatorDao
+import org.allatra.calendar.data.db.dao.UserSettingsDao
+import org.allatra.calendar.data.db.entity.Motivator
+import org.allatra.calendar.data.db.entity.UserSettings
 
 @Database(entities = [UserSettings::class, Motivator::class], version = 1)
 @TypeConverters(Converters::class)

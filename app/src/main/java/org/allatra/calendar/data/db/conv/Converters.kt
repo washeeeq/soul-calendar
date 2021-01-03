@@ -1,4 +1,4 @@
-package org.allatra.calendar.db.conv
+package org.allatra.calendar.data.db.conv
 
 import androidx.room.TypeConverter
 import org.joda.time.DateTime

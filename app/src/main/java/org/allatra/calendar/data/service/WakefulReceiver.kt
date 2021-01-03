@@ -1,4 +1,4 @@
-package org.allatra.calendar.service
+package org.allatra.calendar.data.service
 
 import android.app.*
 import android.app.NotificationManager.IMPORTANCE_HIGH
