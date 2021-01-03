@@ -23,6 +23,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import com.bumptech.glide.Glide
+import com.bumptech.glide.Glide.with
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
@@ -42,6 +43,9 @@ import org.allatra.calendar.data.service.CalendarFirebaseMessagingService
 import org.allatra.calendar.data.service.WakefulReceiver
 import org.allatra.calendar.data.service.WakefulReceiver.Companion.WAKE_RECEIVE_NOTIF
 import org.allatra.calendar.ui.factory.CalendarFactory
+import org.allatra.calendar.ui.view.CalendarGlideModule
+import org.allatra.calendar.ui.view.GlideApp
+import org.allatra.calendar.ui.view.GlideApp.with
 import org.allatra.calendar.ui.viewmodel.CalendarViewModel
 import org.allatra.calendar.util.PictureLoaderHelper
 import org.allatra.calendar.util.UtilHelper
@@ -175,8 +179,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
          * Save all changed settings to DB.
          */
         btnSave.setOnClickListener {
-            loader.show()
-            Thread.sleep(2000)
+            showLoader()
             updateDbAndSchedule()
 
             showOrHideSettings()
@@ -266,6 +269,14 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         unregisterReceiver(wakefulReceiver)
     }
 
+    private fun showLoader() {
+        loader.visibility = View.VISIBLE
+    }
+
+    private fun hideLoader() {
+        loader.visibility = View.GONE
+    }
+
     private fun updateLastDownloadedAt(lastDownloadedAt: DateTime) {
         model.updateMotivator(lastDownloadedAt)
     }
@@ -277,9 +288,11 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         val notificationTimeString = "${txtHours.text}${txtDivider.text}${txtMinutes.text}"
         val notificationTime = LocalTime.parse(notificationTimeString)
         var languageChanged = false
+        var notificationTimePrevious: LocalTime? = null
 
         newApiLanguageId?.let { apiCurrentLanguageId ->
             model.userSettingsResource.value?.data?.let {
+                notificationTimePrevious = it.notificationTime
                 Timber.i("User settings exist already! Let us update them.")
                 model.createOrUpdateUserSettings(
                     true,
@@ -317,15 +330,19 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
         }
 
         if (sendNotifications) {
-            // remove previous
-            removeNotificationsSchedule()
-            // schedule new
-            scheduleNotifications(notificationTime)
+            if (notificationTimePrevious != null && notificationTime == notificationTimePrevious) {
+                // do nothing
+            } else {
+                // remove previous
+                removeNotificationsSchedule()
+                // schedule new
+                scheduleNotifications(notificationTime)
+            }
         } else {
             removeNotificationsSchedule()
         }
 
-        loader.hide()
+        hideLoader()
     }
 
     private fun getApiLanguageId(mapOfLanguages: Map<Int, String>, languageCode: String): String? {
@@ -900,7 +917,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private fun loadPictureAndStore(url: String, dateTime: DateTime) {
         if (UtilHelper.isNetworkAvailable(this)) {
             motivatorOfDay?.let {
-                Glide
+                GlideApp
                     .with(this)
                     .load(url)
                     .centerCrop()
