@@ -23,6 +23,7 @@ import org.allatra.calendar.data.repository.CalendarRepository
 import org.allatra.calendar.data.db.AppDatabase
 import org.allatra.calendar.data.db.entity.Motivator
 import org.allatra.calendar.data.db.entity.UserSettings
+import org.allatra.calendar.util.UtilHelper
 import org.joda.time.DateTime
 import org.joda.time.LocalTime
 import timber.log.Timber
@@ -106,6 +107,7 @@ class CalendarViewModel(
                         _languagesResource.postValue(Resource.success(response))
                     } else {
                         Timber.e("Call ended with error.")
+                        UtilHelper.logAndFirebaseException("Rest call while fetching languages ended with error on backend api, response OK = ${response.ok}")
                         _languagesResource.postValue(
                             Resource.error(
                                 Constants.ErrorType.BACKEND_API,
@@ -115,6 +117,7 @@ class CalendarViewModel(
                     }
                 } ?: kotlin.run {
                     Timber.e("Call ended with error.")
+                    UtilHelper.logAndFirebaseException("Rest call while fetching languages ended with error on backend api, resource response is null!")
                     _languagesResource.postValue(
                         Resource.error(
                             Constants.ErrorType.BACKEND_API,
@@ -125,8 +128,9 @@ class CalendarViewModel(
             }
                 ,
                 {
-                    Timber.e("Call ended with failure.")
-                    _languagesResource.postValue(Resource.error(Constants.ErrorType.BACKEND_API, null))
+                    Timber.e("Call ended with network failure.")
+                    UtilHelper.logAndFirebaseThrowable(it)
+                    _languagesResource.postValue(Resource.error(Constants.ErrorType.NETWORK, null))
                 }
             )
     }

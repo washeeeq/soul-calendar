@@ -3,7 +3,6 @@ package org.allatra.calendar.ui.view.activity
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -14,7 +13,6 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
@@ -24,7 +22,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import com.bumptech.glide.Glide
-import com.bumptech.glide.Glide.with
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
@@ -44,9 +41,7 @@ import org.allatra.calendar.data.service.CalendarFirebaseMessagingService
 import org.allatra.calendar.data.service.WakefulReceiver
 import org.allatra.calendar.data.service.WakefulReceiver.Companion.WAKE_RECEIVE_NOTIF
 import org.allatra.calendar.ui.factory.CalendarFactory
-import org.allatra.calendar.ui.view.CalendarGlideModule
 import org.allatra.calendar.ui.view.GlideApp
-import org.allatra.calendar.ui.view.GlideApp.with
 import org.allatra.calendar.ui.viewmodel.CalendarViewModel
 import org.allatra.calendar.util.PictureLoaderHelper
 import org.allatra.calendar.util.UtilHelper
@@ -55,6 +50,7 @@ import org.joda.time.LocalTime
 import timber.log.Timber
 import java.io.File
 import java.lang.Exception
+import java.lang.RuntimeException
 import java.util.*
 
 class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(Dispatchers.Default), ActivityCompat.OnRequestPermissionsResultCallback {
@@ -255,9 +251,13 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     }
 
     override fun onDestroy() {
+        try {
+            unregisterReceiver(wakefulReceiver)
+        } catch (e: RuntimeException) {
+            UtilHelper.logAndFirebaseThrowable(e)
+        }
+
         super.onDestroy()
-        // deregister on quit
-        unregisterReceiver(wakefulReceiver)
     }
 
     private fun getSelectedLanguageCode(): String {
@@ -314,7 +314,9 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                     notificationTime
                 )
 
-                if (languageCodeString != DEFAULT_LOCALE) {
+                val locale = getCurrentLocale()
+                Timber.i("Locale language is: ${locale.language}")
+                if (languageCodeString != locale.language) {
                     languageChanged = true
                 }
             }
@@ -433,15 +435,37 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
      * Hide or shows settings.
      */
     private fun showOrHideSettings() {
-        sliderSettings?.let {
-            if (it.getIsContracted()) {
-                it.setIsContracted(false)
-            } else {
-                it.setIsContracted(true)
+        when (model.languagesResource.value?.apiStatus) {
+            Constants.ApiStatus.LOADING -> {
+                showCustomMessage(getString(R.string.txt_wait_loading_resources))
+            }
+
+            Constants.ApiStatus.ERROR -> {
+                when (model.languagesResource.value?.errorType) {
+                    Constants.ErrorType.NETWORK -> {
+                        showCustomMessage(getString(R.string.error_network_failure))
+                    }
+                    Constants.ErrorType.BACKEND_API -> {
+                        showCustomMessage(getString(R.string.error_backend_failure))
+                    }
+                    else -> {
+                        showCustomMessage(getString(R.string.error_local_db_failure))
+                    }
+                }
+            }
+
+            else -> {
+                sliderSettings?.let {
+                    if (it.getIsContracted()) {
+                        it.setIsContracted(false)
+                    } else {
+                        it.setIsContracted(true)
+                    }
+                }
+
+                switchUi()
             }
         }
-
-        switchUi()
     }
 
     private fun showTimeNotificationLayout(){
@@ -540,6 +564,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
                     Constants.ApiStatus.ERROR -> {
                         loader.hide()
+
                         resource.errorType?.let {
                             when (it) {
                                 Constants.ErrorType.BACKEND_API -> {
