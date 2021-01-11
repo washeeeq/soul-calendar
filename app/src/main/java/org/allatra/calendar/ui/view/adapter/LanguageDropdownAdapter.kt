@@ -7,7 +7,9 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import org.allatra.calendar.R
-
+import org.allatra.calendar.common.Constants.FIREBASE_UNMAPPED_LANGUAGE
+import org.allatra.calendar.util.UtilHelper
+import timber.log.Timber
 
 class LanguageDropdownAdapter(
     context: Context, textViewResourceId: Int,
@@ -38,11 +40,21 @@ class LanguageDropdownAdapter(
     private fun getLanguage(langCode: String): String {
         return when (langCode) {
             "cs" -> "Česky"
+            "sk" -> "Slovensky"
             "ru" -> "Русский"
+            "uk" -> "українська"
             "en" -> "English"
             "de" -> "Deutsch"
+            "it" -> "Italiano"
+            "fr" -> "Français"
+            "sp" -> "Español"
 
-            else -> "Unkown"
+            else -> {
+                Timber.e("Unmapped language code $langCode")
+                UtilHelper.addKeyValueFirebase(FIREBASE_UNMAPPED_LANGUAGE, langCode)
+                UtilHelper.logAndFirebaseException("Unmapped language.")
+                "Unmapped"
+            }
         }
     }
 

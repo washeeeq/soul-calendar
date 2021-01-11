@@ -27,7 +27,6 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.thelittlefireman.appkillermanager.managers.KillerManager
 import com.thelittlefireman.appkillermanager.ui.DialogKillerManagerBuilder
 import kotlinx.android.synthetic.main.activity_calendar.*
@@ -56,6 +55,7 @@ import java.lang.Exception
 import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
 import java.util.*
+import kotlin.properties.Delegates
 
 class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(Dispatchers.Default), ActivityCompat.OnRequestPermissionsResultCallback {
     private var moveYtoDefaultPosition: Float = 0f
@@ -67,6 +67,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     private var languageArrayAdapter: ArrayAdapter<String>? = null
     private var wakefulReceiver: WakefulReceiver? = null
     private lateinit var model: CalendarViewModel
+    private var onCreateState by Delegates.notNull<Boolean>()
 
     companion object {
         private const val MOTIVATOR_NAME = "motivator.jpeg"
@@ -84,6 +85,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
     @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        onCreateState = true
         setContentView(R.layout.activity_calendar)
 
         if (BuildConfig.DEBUG) {
@@ -255,8 +257,14 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
 
     override fun onResume() {
         super.onResume()
+        Timber.i("Application started new: $onCreateState")
 
-        // TODO: We shall check on resume
+        if (onCreateState) {
+            // do nothing was from the onCreate
+            onCreateState = false
+        } else {
+            setLanguageAndDailyPicture()
+        }
     }
 
     override fun onDestroy() {
@@ -533,7 +541,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                             if (indexLangCode != -1) {
                                 // create languagelist
                                 it.data.table.forEach { recordArray ->
-                                    val langId = recordArray[indexLangId]
+                                    // val langId = recordArray[indexLangId]
                                     val langCode = recordArray[indexLangCode]
 
                                     if (langCode is String) {
@@ -544,15 +552,8 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                                 }
 
                                 Timber.i("Data fetched..")
-
-                                // init languages
-//                                languageArrayAdapter = ArrayAdapter(
-//                                    this,
-//                                    R.layout.custom_spinner_textview,
-//                                    listOfLanguages.toTypedArray()
-//                                )
-                                //languageArrayAdapter!!.setDropDownViewResource(R.layout.custom_spinner_dropdown_item)
-                                spnLanguage.adapter = LanguageDropdownAdapter(this, R.layout.custom_spinner_dropdown_item, listOfLanguages.toTypedArray())
+                                languageArrayAdapter = LanguageDropdownAdapter(this, R.layout.custom_spinner_dropdown_item, listOfLanguages.toTypedArray())
+                                spnLanguage.adapter = languageArrayAdapter
 
                                 if (model.userSettingsResource.value != null && model.userSettingsResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
                                     && model.motivatorResource.value != null && model.motivatorResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
