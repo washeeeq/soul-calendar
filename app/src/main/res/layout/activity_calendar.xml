@@ -182,6 +182,7 @@
 
                 <androidx.appcompat.widget.AppCompatSpinner
                     android:id="@+id/spnLanguage"
+                    android:spinnerMode="dialog"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@color/colorTransparent"/>

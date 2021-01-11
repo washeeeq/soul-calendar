@@ -27,6 +27,7 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.thelittlefireman.appkillermanager.managers.KillerManager
 import com.thelittlefireman.appkillermanager.ui.DialogKillerManagerBuilder
 import kotlinx.android.synthetic.main.activity_calendar.*
@@ -36,12 +37,14 @@ import org.allatra.calendar.BuildConfig
 import org.allatra.calendar.R
 import org.allatra.calendar.common.Constants
 import org.allatra.calendar.common.Constants.DEFAULT_LOCALE
+import org.allatra.calendar.common.Constants.FIREBASE_TIMESTAMP_TO_LOAD_FROM
 import org.allatra.calendar.data.db.entity.UserSettings
 import org.allatra.calendar.data.service.CalendarFirebaseMessagingService
 import org.allatra.calendar.data.service.WakefulReceiver
 import org.allatra.calendar.data.service.WakefulReceiver.Companion.WAKE_RECEIVE_NOTIF
 import org.allatra.calendar.ui.factory.CalendarFactory
 import org.allatra.calendar.ui.view.GlideApp
+import org.allatra.calendar.ui.view.adapter.LanguageDropdownAdapter
 import org.allatra.calendar.ui.viewmodel.CalendarViewModel
 import org.allatra.calendar.util.PictureLoaderHelper
 import org.allatra.calendar.util.UtilHelper
@@ -50,6 +53,7 @@ import org.joda.time.LocalTime
 import timber.log.Timber
 import java.io.File
 import java.lang.Exception
+import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
 import java.util.*
 
@@ -186,8 +190,13 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
          * Share picture.
          */
         shareLayoutGroup.setOnClickListener {
-            model.motivatorResource.value?.data?.let {
-                val localFile = getLocalMotivatorFile(it.lastDownloadAt)
+            try {
+                val dateTimeStamp = model.motivatorResource.value?.data?.lastDownloadAt ?: kotlin.run {
+                    DateTime.now()
+                }
+                Timber.d("Used timestamp to get the motivator: $dateTimeStamp")
+                UtilHelper.addKeyValueFirebase(FIREBASE_TIMESTAMP_TO_LOAD_FROM,dateTimeStamp.toString())
+                val localFile = getLocalMotivatorFile(dateTimeStamp)
                 Timber.i("Path to load is ${localFile.absolutePath}")
 
                 val shareUri = FileProvider.getUriForFile(
@@ -206,7 +215,7 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                         getString(R.string.txt_interesting_quote)
                     )
                 )
-            }?: kotlin.run {
+            } catch (e: IllegalArgumentException) {
                 Timber.e("Drawable is null, no sharing can be done.")
                 showCustomMessage(getString(R.string.txt_error_no_picture_saved))
             }
@@ -537,13 +546,13 @@ class CalendarActivity : AppCompatActivity(), CoroutineScope by CoroutineScope(D
                                 Timber.i("Data fetched..")
 
                                 // init languages
-                                languageArrayAdapter = ArrayAdapter(
-                                    this,
-                                    R.layout.custom_spinner_textview,
-                                    listOfLanguages.toTypedArray()
-                                )
-                                languageArrayAdapter!!.setDropDownViewResource(R.layout.custom_spinner_dropdown_item)
-                                spnLanguage.adapter = languageArrayAdapter
+//                                languageArrayAdapter = ArrayAdapter(
+//                                    this,
+//                                    R.layout.custom_spinner_textview,
+//                                    listOfLanguages.toTypedArray()
+//                                )
+                                //languageArrayAdapter!!.setDropDownViewResource(R.layout.custom_spinner_dropdown_item)
+                                spnLanguage.adapter = LanguageDropdownAdapter(this, R.layout.custom_spinner_dropdown_item, listOfLanguages.toTypedArray())
 
                                 if (model.userSettingsResource.value != null && model.userSettingsResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS
                                     && model.motivatorResource.value != null && model.motivatorResource.value!!.apiStatus == Constants.ApiStatus.SUCCESS

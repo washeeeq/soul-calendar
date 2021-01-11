@@ -40,4 +40,6 @@ object Constants {
         LOCAL_DB,
         NETWORK
     }
+
+    const val FIREBASE_TIMESTAMP_TO_LOAD_FROM = "TIMESTAMP_TO_LOAD_FROM"
 }

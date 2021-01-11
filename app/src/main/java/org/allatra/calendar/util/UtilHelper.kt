@@ -12,6 +12,9 @@ import timber.log.Timber
 import java.util.*
 
 object UtilHelper {
+    fun addKeyValueFirebase(key: String, value: String) {
+        FirebaseCrashlytics.getInstance().setCustomKey(key, value)
+    }
     fun logAndFirebaseException(message: String){
         FirebaseCrashlytics.getInstance().recordException(java.lang.Exception(message))
         Timber.e(message)

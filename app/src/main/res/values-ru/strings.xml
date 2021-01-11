@@ -4,7 +4,7 @@
     <string name="txt_select_language">Выберите язык для цитат</string>
     <string name="txt_allow_notifications">Разрешить ежедневные уведомления</string>
     <string name="txt_time_of_notification">Время уведомления</string>
-    <string name="txt_share">Поделится</string>
+    <string name="txt_share">поделиться</string>
     <string name="txt_btn_cancel">Отменить</string>
     <string name="txt_btn_save">Сохранить</string>
     <string name="txt_default_minute">00</string>
