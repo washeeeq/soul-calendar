@@ -12,7 +12,7 @@ import org.allatra.calendar.data.db.dao.UserSettingsDao
 import org.allatra.calendar.data.db.entity.Motivator
 import org.allatra.calendar.data.db.entity.UserSettings
 
-@Database(entities = [UserSettings::class, Motivator::class], version = 1)
+@Database(entities = [UserSettings::class, Motivator::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userSettingsDao(): UserSettingsDao
