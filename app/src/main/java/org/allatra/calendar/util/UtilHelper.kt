@@ -4,12 +4,26 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.util.Log
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import org.allatra.calendar.common.Constants
 import org.joda.time.DateTime
 import timber.log.Timber
 import java.util.*
 
 object UtilHelper {
+    fun addKeyValueFirebase(key: String, value: String) {
+        FirebaseCrashlytics.getInstance().setCustomKey(key, value)
+    }
+    fun logAndFirebaseException(message: String){
+        FirebaseCrashlytics.getInstance().recordException(java.lang.Exception(message))
+        Timber.e(message)
+    }
+
+    fun logAndFirebaseThrowable(throwable: Throwable){
+        FirebaseCrashlytics.getInstance().recordException(throwable)
+    }
+
     /**
      * func fetchUrl(forDate date: Date = Date()) -> String {
     let currentLanguage = LanguageManager.default.currentLanguage
@@ -24,11 +38,9 @@ object UtilHelper {
     }
      */
     fun getApiUrl(languageId: Int, screenHeight: Int, screenWidth: Int, dateTime: DateTime): String {
-        val date = DateTime.now()
         val screenResolution = "${screenHeight}x${screenWidth}"
         return "${Constants.API_URL}${Constants.API_PARAM_SC}=${screenResolution}&${Constants.API_PARAM_LI}=$languageId&day=${dateTime.dayOfMonth}&month=${dateTime.monthOfYear}&year=${dateTime.year}"
     }
-
 
     /**
      * Returns false when network is not connected.

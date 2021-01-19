@@ -15,5 +15,7 @@
     <string name="txt_warn_no_notifications_will_deliver">Жодні повідомлення показуватись не будуть!</string>
     <string name="error_backend_failure">Виникла проблема з сервером. Будь ласка спробуйте пізніше.</string>
     <string name="error_local_db_failure">Виникла проблема з локальною базою данних. Повторіть спробу пізніше або зверніться в службу підтримки.</string>
-    <string name="error_network_failure">Ваш пристрій не підключено до мережі. Будь ласка скористайтесь Wi-Fi або іншим інтернет сполученням</string>
+    <string name="error_network_failure">Ваш пристрій не підключено до мережі. Будь ласка скористайтесь Wi-Fi або іншим інтернет сполученням і перезапустіть програму.</string>
+    <string name="txt_interesting_quote">Я хотів би поділитися з вами цікавою цитатою:</string>
+    <string name="txt_wait_loading_resources">Ми завантажуємо ресурси, лише секунду!</string>
 </resources>

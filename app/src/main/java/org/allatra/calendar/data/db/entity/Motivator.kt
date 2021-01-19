@@ -1,4 +1,4 @@
-package org.allatra.calendar.db.entity
+package org.allatra.calendar.data.db.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

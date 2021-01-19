@@ -15,5 +15,7 @@
     <string name="txt_warn_no_notifications_will_deliver">Nebudou doručena žádná oznámení!</string>
     <string name="error_backend_failure">Došlo k problému s backendovým serverem. Zkuste to znovu později nebo kontaktujte naši podporu.</string>
     <string name="error_local_db_failure">Došlo k problému s místní databází. Zkuste to znovu později nebo kontaktujte naši podporu.</string>
-    <string name="error_network_failure">Vaše zařízení není připojeno k síti. Použijte prosím Wifi nebo svého poskytovatele dat.</string>
+    <string name="error_network_failure">Vaše zařízení není připojeno k síti. Použijte prosím Wifi nebo svého poskytovatele dat a restartujte aplikaci.</string>
+    <string name="txt_interesting_quote">Rád bych se s vámi podělit zajímavý citát:</string>
+    <string name="txt_wait_loading_resources">Načítáme zdroje, jen vteřinu!</string>
 </resources>

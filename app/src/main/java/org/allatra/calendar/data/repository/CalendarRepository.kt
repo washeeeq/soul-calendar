@@ -1,10 +1,10 @@
 package org.allatra.calendar.data.repository
 
 import org.allatra.calendar.data.api.ApiClient
-import org.allatra.calendar.db.dao.MotivatorDao
-import org.allatra.calendar.db.dao.UserSettingsDao
-import org.allatra.calendar.db.entity.Motivator
-import org.allatra.calendar.db.entity.UserSettings
+import org.allatra.calendar.data.db.dao.MotivatorDao
+import org.allatra.calendar.data.db.dao.UserSettingsDao
+import org.allatra.calendar.data.db.entity.Motivator
+import org.allatra.calendar.data.db.entity.UserSettings
 
 /**
  * This class is the only single point of contact for the ViewModel.

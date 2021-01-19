@@ -1,4 +1,4 @@
-package org.allatra.calendar.db.entity
+package org.allatra.calendar.data.db.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -14,5 +14,6 @@ data class UserSettings(
     val uid: Int,
     @ColumnInfo(name = "api_language_id") var apiLanguageId: String,
     @ColumnInfo(name = "send_notifications") var sendNotifications: Boolean,
-    @ColumnInfo(name = "notification_time") var notificationTime: LocalTime
+    @ColumnInfo(name = "notification_time") var notificationTime: LocalTime,
+    @ColumnInfo(name = "fcm_registration_token") var fcmRegistrationToken: String,
 )

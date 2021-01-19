@@ -6,8 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:ellipsize="marquee"
-    android:background="@color/colorDropDownLangBg"
-    android:textColor="@color/colorWhite"
+    android:textColor="@color/colorBgCalendar"
     android:textAlignment="gravity"
     android:gravity="center_horizontal|center_vertical"
     android:padding="5dp"/>
